@@ -5,14 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import Landing from './Landing';
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, loading]);
+
+  // Show nothing while loading to avoid flicker
+  if (loading) return null;
 
   return <Landing />;
 };

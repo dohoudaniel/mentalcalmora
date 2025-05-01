@@ -9,7 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      mood_entries: {
+        Row: {
+          description: string | null
+          id: string
+          mood: string
+          score: number
+          sentiment: string
+          text: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          mood: string
+          score: number
+          sentiment: string
+          text: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          mood?: string
+          score?: number
+          sentiment?: string
+          text?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          first_name: string
+          id: string
+          last_login: string | null
+          last_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_name: string
+          id: string
+          last_login?: string | null
+          last_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_login?: string | null
+          last_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          description: string
+          id: string
+          sentiment_target: string
+          title: string
+          type: string
+        }
+        Insert: {
+          description: string
+          id?: string
+          sentiment_target: string
+          title: string
+          type: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          sentiment_target?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

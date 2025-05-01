@@ -2,10 +2,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/components/ui/use-toast";
+import { fetchUserMoodEntries, addMoodEntry as addMoodEntryToDb, fetchRecommendations } from '@/services/moodService';
 
 export interface MoodEntry {
-  id: number;
-  userId: number;
+  id: string | number;
+  userId: string;
   text: string;
   mood: string;
   description?: string;
@@ -24,17 +25,19 @@ export interface Recommendation {
 interface MoodContextType {
   entries: MoodEntry[];
   recommendations: Recommendation[];
-  addMoodEntry: (mood: string, description?: string) => void;
+  addMoodEntry: (mood: string, description?: string) => Promise<MoodEntry | null>;
   getLatestEntry: () => MoodEntry | null;
   getUserTrend: () => { trend: string | null, notes: string, chart?: { labels: string[], data: number[] } };
+  loading: boolean;
 }
 
 const MoodContext = createContext<MoodContextType>({
   entries: [],
   recommendations: [],
-  addMoodEntry: () => {},
+  addMoodEntry: async () => null,
   getLatestEntry: () => null,
   getUserTrend: () => ({ trend: null, notes: "No data available." }),
+  loading: false
 });
 
 export const useMood = () => useContext(MoodContext);
@@ -47,122 +50,76 @@ export function MoodProvider({ children }: MoodProviderProps) {
   const { currentUser, isAuthenticated } = useAuth();
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Load entries from localStorage when component mounts or user changes
+  // Load entries and recommendations when user changes
   useEffect(() => {
-    if (isAuthenticated && currentUser) {
-      const storedEntries = localStorage.getItem(`calmora_entries_${currentUser.id}`);
-      
-      if (storedEntries) {
+    const loadData = async () => {
+      if (isAuthenticated && currentUser) {
+        setLoading(true);
         try {
-          setEntries(JSON.parse(storedEntries));
+          // Load mood entries
+          const userEntries = await fetchUserMoodEntries(currentUser.id);
+          setEntries(userEntries);
+          
+          // Generate recommendations based on latest entry
+          await generateRecommendations(userEntries);
         } catch (error) {
-          console.error('Error parsing stored entries:', error);
-          setEntries([]);
+          console.error('Error loading mood data:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load your mood data. Please try refreshing the page.",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
         }
+      } else {
+        // Reset when logged out
+        setEntries([]);
+        setRecommendations([]);
       }
-      
-      generateRecommendations();
-    } else {
-      setEntries([]);
-      setRecommendations([]);
-    }
+    };
+    
+    loadData();
   }, [currentUser, isAuthenticated]);
 
-  const generateRecommendations = () => {
-    // Simplified recommendation logic based on recent entries
-    const positiveRecommendations = [
-      {
-        id: 1,
-        title: "Maintain Your Momentum",
-        description: "You're doing great! Try starting your day with a gratitude journal to maintain this positive outlook.",
-        type: "mindfulness" as const,
-      },
-      {
-        id: 2,
-        title: "Healthy Habit Boost",
-        description: "Your positive mood is perfect for establishing a new healthy habit. Consider adding a short morning walk to your routine.",
-        type: "health" as const,
-      },
-      {
-        id: 3,
-        title: "Share Your Positivity",
-        description: "Your good mood can be contagious! Reach out to a friend or family member who might need some encouragement today.",
-        type: "social" as const,
-      }
-    ];
-
-    const neutralRecommendations = [
-      {
-        id: 4,
-        title: "Mindful Moment",
-        description: "Take 5 minutes for mindful breathing to center yourself and bring awareness to your present state.",
-        type: "mindfulness" as const,
-      },
-      {
-        id: 5,
-        title: "Small Achievement",
-        description: "Set and complete one small goal today - it can help shift your mood in a positive direction.",
-        type: "general" as const,
-      },
-      {
-        id: 6,
-        title: "Nature Connection",
-        description: "Spending even 15 minutes in nature can help stabilize and potentially improve your mood.",
-        type: "health" as const,
-      }
-    ];
-
-    const negativeRecommendations = [
-      {
-        id: 7,
-        title: "Gentle Movement",
-        description: "Even a short 5-minute stretch can help release tension and slightly boost your mood.",
-        type: "exercise" as const,
-      },
-      {
-        id: 8,
-        title: "Self-Compassion Break",
-        description: "Acknowledge that you're going through a difficult time. Place a hand on your heart and offer yourself some kind words.",
-        type: "mindfulness" as const,
-      },
-      {
-        id: 9,
-        title: "Supportive Connection",
-        description: "Consider reaching out to someone you trust. Sometimes sharing your feelings can help lighten the load.",
-        type: "social" as const,
-      }
-    ];
-
-    const latestEntry = getLatestEntry();
-    
-    if (!latestEntry) {
-      setRecommendations(neutralRecommendations);
+  const generateRecommendations = async (userEntries: MoodEntry[]) => {
+    if (!userEntries || userEntries.length === 0) {
+      // Load neutral recommendations if no entries
+      const neutralRecs = await fetchRecommendations('NEUTRAL');
+      setRecommendations(neutralRecs);
       return;
     }
     
+    // Get latest entry to determine recommendation type
+    const latestEntry = userEntries[0];
+    let sentimentTarget: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+    
     if (latestEntry.sentiment === 'POSITIVE' || latestEntry.score > 0.6) {
-      setRecommendations(positiveRecommendations);
+      sentimentTarget = 'POSITIVE';
     } else if (latestEntry.sentiment === 'NEGATIVE' || latestEntry.score < 0.4) {
-      setRecommendations(negativeRecommendations);
+      sentimentTarget = 'NEGATIVE';
     } else {
-      setRecommendations(neutralRecommendations);
+      sentimentTarget = 'NEUTRAL';
     }
+    
+    // Fetch appropriate recommendations
+    const recs = await fetchRecommendations(sentimentTarget);
+    setRecommendations(recs);
   };
 
-  const addMoodEntry = (mood: string, description?: string) => {
-    if (!currentUser) return;
-    
-    // Analyze sentiment (simplified for demo)
-    let sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
-    let score: number;
-    
+  const analyzeSentiment = (text: string): { sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL', score: number } => {
+    // Simplified sentiment analysis for demo
     const positiveWords = ['happy', 'great', 'excellent', 'good', 'joy', 'excited', 'calm', 'peaceful', 'relaxed'];
     const negativeWords = ['sad', 'angry', 'upset', 'anxious', 'stressed', 'worried', 'tired', 'frustrated', 'depressed'];
     
-    const text = (mood + ' ' + (description || '')).toLowerCase();
-    const positiveCount = positiveWords.filter(word => text.includes(word)).length;
-    const negativeCount = negativeWords.filter(word => text.includes(word)).length;
+    const lowerText = text.toLowerCase();
+    const positiveCount = positiveWords.filter(word => lowerText.includes(word)).length;
+    const negativeCount = negativeWords.filter(word => lowerText.includes(word)).length;
+    
+    let sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
+    let score: number;
     
     if (positiveCount > negativeCount) {
       sentiment = 'POSITIVE';
@@ -178,30 +135,52 @@ export function MoodProvider({ children }: MoodProviderProps) {
     // Cap the score between 0 and 1
     score = Math.min(1, Math.max(0, score));
     
-    const newEntry: MoodEntry = {
-      id: Date.now(),
-      userId: currentUser.id,
-      text: description || mood,
-      mood,
-      description,
-      sentiment,
-      score,
-      timestamp: new Date().toISOString(),
-    };
+    return { sentiment, score };
+  };
+
+  const addMoodEntry = async (mood: string, description?: string): Promise<MoodEntry | null> => {
+    if (!currentUser) return null;
     
-    const updatedEntries = [newEntry, ...entries];
-    setEntries(updatedEntries);
-    
-    // Save to localStorage
-    localStorage.setItem(`calmora_entries_${currentUser.id}`, JSON.stringify(updatedEntries));
-    
-    // Generate new recommendations based on this entry
-    generateRecommendations();
-    
-    toast({
-      title: "Mood recorded",
-      description: "Your mood entry has been saved successfully.",
-    });
+    try {
+      // Analyze sentiment
+      const text = (mood + ' ' + (description || '')).toLowerCase();
+      const { sentiment, score } = analyzeSentiment(text);
+      
+      // Save to database
+      const newEntry = await addMoodEntryToDb(
+        currentUser.id,
+        mood,
+        description,
+        sentiment,
+        score
+      );
+      
+      if (!newEntry) {
+        throw new Error('Failed to save mood entry');
+      }
+      
+      // Update local state
+      const updatedEntries = [newEntry, ...entries];
+      setEntries(updatedEntries);
+      
+      // Generate new recommendations
+      await generateRecommendations([newEntry, ...entries]);
+      
+      toast({
+        title: "Mood recorded",
+        description: "Your mood entry has been saved successfully.",
+      });
+      
+      return newEntry;
+    } catch (error) {
+      console.error('Error adding mood entry:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save your mood entry. Please try again.",
+        variant: "destructive",
+      });
+      return null;
+    }
   };
   
   const getLatestEntry = (): MoodEntry | null => {
@@ -261,7 +240,8 @@ export function MoodProvider({ children }: MoodProviderProps) {
     recommendations,
     addMoodEntry,
     getLatestEntry,
-    getUserTrend
+    getUserTrend,
+    loading
   };
 
   return <MoodContext.Provider value={value}>{children}</MoodContext.Provider>;

@@ -1,0 +1,165 @@
+
+import { useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from './use-toast';
+
+export function useSupabaseAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        // Log events for debugging
+        console.log('Auth event:', event);
+        
+        if (event === 'SIGNED_IN') {
+          // Update last login time in profiles
+          if (newSession?.user) {
+            setTimeout(() => {
+              updateLastLogin(newSession.user.id);
+            }, 0);
+          }
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const updateLastLogin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) {
+        console.error('Error updating last login:', error);
+      }
+    } catch (error) {
+      console.error('Failed to update last login:', error);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back to Calmora!",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const signup = async (firstName: string, lastName: string, email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Signup failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Registration successful",
+        description: "Welcome to Calmora!",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        title: "Signup error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  return {
+    user,
+    session,
+    loading,
+    login,
+    signup,
+    logout,
+  };
+}

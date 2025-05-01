@@ -3,19 +3,19 @@ import { useState } from "react";
 import { useMood } from "@/contexts/MoodContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 
 const MoodForm = () => {
   const navigate = useNavigate();
-  const { addMoodEntry, entries } = useMood();
+  const { addMoodEntry } = useMood();
   const [mood, setMood] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!mood) {
@@ -30,13 +30,14 @@ const MoodForm = () => {
     setIsSubmitting(true);
     
     try {
-      addMoodEntry(mood, description);
+      const newEntry = await addMoodEntry(mood, description);
       setMood("");
       setDescription("");
       
-      // Navigate to results page
-      const latestEntryId = entries.length > 0 ? entries[0].id + 1 : 1;
-      navigate(`/results/${latestEntryId}`);
+      // Navigate to results page if entry was created
+      if (newEntry) {
+        navigate(`/results/${newEntry.id}`);
+      }
     } catch (error) {
       toast({
         title: "Error",
