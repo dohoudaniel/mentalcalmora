@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Calmora custom colors
+				"mint-mist": "#F6FFFD",
+				"slate-text": "#2E3A44",
+				"leaf-green": "#37D69C",
+				"lavender": "#C5B8F2",
+				"sky-blue": "#8FD5F8",
+				"peach-glow": "#F2D5B3",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +92,21 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' },
+				},
+				'pulse-subtle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' },
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 6s ease-in-out infinite',
+				'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite'
 			}
 		}
 	},
