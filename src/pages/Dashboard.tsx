@@ -31,7 +31,8 @@ const Dashboard = () => {
             <div className="w-full lg:w-1/3 space-y-8">
               <div className="bg-white p-4 rounded-lg shadow-md">
                 <h1 className="text-2xl font-bold text-slate-text mb-1">
-                  Welcome back, {currentUser?.firstName}!
+                  Welcome back!
+{/*                   , {currentUser?.firstName}! */}
                 </h1>
                 <p className="text-slate-text/80">
                   How are you feeling today?
