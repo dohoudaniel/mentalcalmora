@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Home, History, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const { currentUser, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white bg-opacity-95 calmora-shadow sticky top-0 z-50">
+    <nav className="bg-white dark:bg-slate-text bg-opacity-95 calmora-shadow sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -26,29 +27,30 @@ export default function Navbar() {
                 <div className="ml-10 flex items-center space-x-4">
                   <Link 
                     to="/dashboard" 
-                    className="text-slate-text hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
+                    className="text-slate-text dark:text-mint-mist hover:text-leaf-green dark:hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
                   >
                     <Home className="h-4 w-4" />
                     Dashboard
                   </Link>
                   <Link 
                     to="/history" 
-                    className="text-slate-text hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
+                    className="text-slate-text dark:text-mint-mist hover:text-leaf-green dark:hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
                   >
                     <History className="h-4 w-4" />
                     History
                   </Link>
                   <Link 
                     to="/profile" 
-                    className="text-slate-text hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
+                    className="text-slate-text dark:text-mint-mist hover:text-leaf-green dark:hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
                   >
                     <User className="h-4 w-4" />
                     Profile
                   </Link>
+                  <ThemeToggle />
                   <Button 
                     onClick={logout} 
                     variant="outline"
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 dark:border-slate-text/30 dark:text-mint-mist"
                   >
                     <LogOut className="h-4 w-4" />
                     Logout
@@ -59,8 +61,9 @@ export default function Navbar() {
           ) : (
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
+                <ThemeToggle />
                 <Link to="/login">
-                  <Button variant="outline">Login</Button>
+                  <Button variant="outline" className="dark:border-slate-text/30 dark:text-mint-mist">Login</Button>
                 </Link>
                 <Link to="/signup">
                   <Button>Sign Up</Button>
@@ -69,10 +72,11 @@ export default function Navbar() {
             </div>
           )}
           
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-slate-text hover:text-leaf-green focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-slate-text dark:text-mint-mist hover:text-leaf-green dark:hover:text-leaf-green focus:outline-none"
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
@@ -92,21 +96,21 @@ export default function Navbar() {
             <>
               <Link
                 to="/dashboard"
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link
                 to="/history"
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 History
               </Link>
               <Link
                 to="/profile"
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Profile
@@ -116,7 +120,7 @@ export default function Navbar() {
                   logout();
                   setIsMenuOpen(false);
                 }}
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
               >
                 Logout
               </button>
@@ -125,14 +129,14 @@ export default function Navbar() {
             <>
               <Link
                 to="/login"
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="text-slate-text hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign Up

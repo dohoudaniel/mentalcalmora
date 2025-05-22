@@ -8,48 +8,74 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ArrowLeft, Heart, Calendar, Book, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const Results = () => {
   const { entryId } = useParams<{ entryId: string }>();
   const navigate = useNavigate();
-  const { entries, recommendations } = useMood();
+  const { recommendations } = useMood();
   const [entry, setEntry] = useState<MoodEntry | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Find the entry by ID
-    if (entryId) {
-      const id = parseInt(entryId);
-      const foundEntry = entries.find(e => e.id === id) || entries[0]; // Fallback to latest entry
-      setEntry(foundEntry || null);
-      
-      // If no entry found, redirect to dashboard
-      if (!foundEntry) {
+    const fetchEntryById = async () => {
+      if (!entryId) {
         navigate("/dashboard");
+        return;
       }
-    }
-  }, [entryId, entries, navigate]);
-  
-  if (!entry) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Loading results...</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Return to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+      
+      setLoading(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('id', entryId)
+          .maybeSingle();
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          // Transform the data to match MoodEntry format
+          const moodEntry: MoodEntry = {
+            id: data.id,
+            userId: data.user_id,
+            mood: data.mood,
+            description: data.description || undefined,
+            text: data.text,
+            sentiment: data.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
+            score: data.score,
+            timestamp: data.timestamp
+          };
+          
+          setEntry(moodEntry);
+        } else {
+          // No entry found with this ID
+          toast({
+            title: "Entry not found",
+            description: "The mood entry you're looking for doesn't exist or you don't have access to it.",
+            variant: "destructive",
+          });
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error('Error fetching mood entry:', error);
+        toast({
+          title: "Error",
+          description: "There was a problem loading this mood entry.",
+          variant: "destructive",
+        });
+        navigate("/dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEntryById();
+  }, [entryId, navigate]);
   
   // Function to get emoji based on mood
   const getMoodEmoji = (mood: string) => {
@@ -82,8 +108,6 @@ const Results = () => {
       default: return '➡️';
     }
   };
-
-  const formattedDate = format(new Date(entry.timestamp), "MMMM d, yyyy 'at' h:mm a");
   
   const getRecommendationIcon = (type: string) => {
     switch (type) {
@@ -98,11 +122,58 @@ const Results = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Loading results...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!entry) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Entry not found</CardTitle>
+              <CardDescription>The mood entry you're looking for doesn't exist or you don't have access to it.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/dashboard")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const formattedDate = format(new Date(entry.timestamp), "MMMM d, yyyy 'at' h:mm a");
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist">
+      <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist dark:bg-slate-text/90">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-6">
             <Button 
@@ -114,36 +185,36 @@ const Results = () => {
               Back
             </Button>
             
-            <h1 className="text-3xl font-bold text-slate-text mb-2">
+            <h1 className="text-3xl font-bold text-slate-text dark:text-mint-mist mb-2">
               Your Mood Results
             </h1>
-            <p className="text-slate-text/80">
+            <p className="text-slate-text/80 dark:text-mint-mist/80">
               Analysis and personalized recommendations based on your entry
             </p>
           </div>
           
-          <Card className="bg-white shadow-md mb-8">
+          <Card className="bg-white dark:bg-slate-text shadow-md mb-8">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2 text-slate-text">
+              <CardTitle className="text-2xl flex items-center gap-2 text-slate-text dark:text-mint-mist">
                 <span className="text-3xl" aria-hidden="true">
                   {getMoodEmoji(entry.mood || '')}
                 </span>
                 {entry.mood}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-mint-mist/80">
                 {formattedDate}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-mint-mist">
-                <p className="text-slate-text whitespace-pre-wrap">
+              <div className="p-4 rounded-lg bg-mint-mist dark:bg-slate-text/60">
+                <p className="text-slate-text dark:text-mint-mist whitespace-pre-wrap">
                   {entry.text}
                 </p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="p-4 rounded-lg bg-white border">
-                  <h3 className="font-medium text-slate-text mb-1">Sentiment Analysis</h3>
+                <div className="p-4 rounded-lg bg-white dark:bg-slate-text/80 border">
+                  <h3 className="font-medium text-slate-text dark:text-mint-mist mb-1">Sentiment Analysis</h3>
                   <div className="flex items-center gap-2">
                     <span className={`font-bold ${getSentimentColor(entry.sentiment)}`}>
                       {entry.sentiment}
@@ -152,13 +223,13 @@ const Results = () => {
                   </div>
                 </div>
                 
-                <div className="p-4 rounded-lg bg-white border">
-                  <h3 className="font-medium text-slate-text mb-1">Sentiment Score</h3>
+                <div className="p-4 rounded-lg bg-white dark:bg-slate-text/80 border">
+                  <h3 className="font-medium text-slate-text dark:text-mint-mist mb-1">Sentiment Score</h3>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold">
+                    <span className="font-bold dark:text-mint-mist">
                       {(entry.score * 100).toFixed(0)}%
                     </span>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
                       <div 
                         className="h-2.5 rounded-full bg-leaf-green" 
                         style={{ width: `${entry.score * 100}%` }}
@@ -170,26 +241,26 @@ const Results = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white shadow-md">
+          <Card className="bg-white dark:bg-slate-text shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl text-slate-text">
+              <CardTitle className="text-2xl text-slate-text dark:text-mint-mist">
                 Your Personalized Recommendations
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-mint-mist/80">
                 Based on your mood and overall mental wellness patterns
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 {recommendations.map((rec) => (
-                  <div key={rec.id} className="p-4 rounded-lg border calmora-card-hover">
+                  <div key={rec.id} className="p-4 rounded-lg border dark:border-slate-text/20 calmora-card-hover dark:bg-slate-text/80">
                     <div className="flex space-x-4">
                       <div className="mt-1">
                         {getRecommendationIcon(rec.type)}
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-slate-text">{rec.title}</h3>
-                        <p className="text-slate-text/80 mt-1">{rec.description}</p>
+                        <h3 className="text-lg font-medium text-slate-text dark:text-mint-mist">{rec.title}</h3>
+                        <p className="text-slate-text/80 dark:text-mint-mist/80 mt-1">{rec.description}</p>
                       </div>
                     </div>
                   </div>

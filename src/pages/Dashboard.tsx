@@ -24,27 +24,26 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist">
+      <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist dark:bg-slate-text/90">
         <div className="container mx-auto">
           <div className="flex flex-col lg:flex-row items-start gap-8">
             {/* Left Column */}
             <div className="w-full lg:w-1/3 space-y-8">
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <h1 className="text-2xl font-bold text-slate-text mb-1">
+              <div className="bg-white dark:bg-slate-text p-4 rounded-lg shadow-md">
+                <h1 className="text-2xl font-bold text-slate-text dark:text-mint-mist mb-1">
                   Welcome back!
-{/*                   , {currentUser?.firstName}! */}
                 </h1>
-                <p className="text-slate-text/80">
+                <p className="text-slate-text/80 dark:text-mint-mist/80">
                   How are you feeling today?
                 </p>
               </div>
               
               <MoodForm />
               
-              <Card className="bg-white shadow-md">
+              <Card className="bg-white dark:bg-slate-text shadow-md">
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-xl text-slate-text">Recent Entries</CardTitle>
+                    <CardTitle className="text-xl text-slate-text dark:text-mint-mist">Recent Entries</CardTitle>
                     <Link to="/history">
                       <Button variant="ghost" size="sm" className="text-leaf-green flex items-center gap-1">
                         <History className="h-4 w-4" />
@@ -61,7 +60,7 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-text/80 text-center py-4">
+                    <p className="text-slate-text/80 dark:text-mint-mist/80 text-center py-4">
                       No mood entries yet. Add your first mood above!
                     </p>
                   )}

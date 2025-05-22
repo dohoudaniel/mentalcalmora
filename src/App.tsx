@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MoodProvider } from "./contexts/MoodContext";
 import { useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -72,15 +73,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <MoodProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </MoodProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="calmora-theme">
+        <AuthProvider>
+          <MoodProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </MoodProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

@@ -27,9 +27,9 @@ const MoodHistoryItem = ({ entry, showLink = true }: MoodHistoryItemProps) => {
   // Function to get background color based on sentiment
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'POSITIVE': return 'bg-gradient-to-r from-leaf-green/10 to-sky-blue/10';
-      case 'NEGATIVE': return 'bg-gradient-to-r from-peach-glow/20 to-peach-glow/10';
-      default: return 'bg-gradient-to-r from-lavender/10 to-lavender/5';
+      case 'POSITIVE': return 'bg-gradient-to-r from-leaf-green/10 to-sky-blue/10 dark:from-leaf-green/20 dark:to-sky-blue/20';
+      case 'NEGATIVE': return 'bg-gradient-to-r from-peach-glow/20 to-peach-glow/10 dark:from-peach-glow/30 dark:to-peach-glow/20';
+      default: return 'bg-gradient-to-r from-lavender/10 to-lavender/5 dark:from-lavender/20 dark:to-lavender/10';
     }
   };
 
@@ -48,8 +48,8 @@ const MoodHistoryItem = ({ entry, showLink = true }: MoodHistoryItemProps) => {
             {getMoodEmoji(entry.mood || '')}
           </span>
           <div>
-            <h4 className="font-medium text-slate-text">{entry.mood}</h4>
-            <p className="text-xs text-slate-text/70">{formattedDate}</p>
+            <h4 className="font-medium text-slate-text dark:text-mint-mist">{entry.mood}</h4>
+            <p className="text-xs text-slate-text/70 dark:text-mint-mist/70">{formattedDate}</p>
           </div>
         </div>
         
@@ -64,7 +64,7 @@ const MoodHistoryItem = ({ entry, showLink = true }: MoodHistoryItemProps) => {
       </div>
       
       {entry.text && (
-        <p className="mt-2 text-sm text-slate-text">
+        <p className="mt-2 text-sm text-slate-text dark:text-mint-mist/90">
           {entry.text}
         </p>
       )}
