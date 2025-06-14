@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast";
 import { User, Download, FileText, FileJson } from "lucide-react";
 import { exportUserData } from "@/utils/dataExport";
+import { checkPasswordStrength } from "@/utils/passwordValidation";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
@@ -87,10 +89,12 @@ const Profile = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
+    // Check password strength
+    const passwordStrength = checkPasswordStrength(newPassword);
+    if (!passwordStrength.isValid) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        title: "Password requirements not met",
+        description: "Please ensure your new password meets all the security requirements.",
         variant: "destructive",
       });
       return;
@@ -245,32 +249,30 @@ const Profile = () => {
                   <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
-                      <div className="relative">
-                        <PasswordInput
-                          id="newPassword"
-                          placeholder="Enter new password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          showPassword={showNewPassword}
-                          onTogglePassword={() => setShowNewPassword(!showNewPassword)}
-                          required
-                        />
-                      </div>
+                      <PasswordInput
+                        id="newPassword"
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        showPassword={showNewPassword}
+                        onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+                        showStrength={true}
+                        strengthRequirements={true}
+                        required
+                      />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <div className="relative">
-                        <PasswordInput
-                          id="confirmPassword"
-                          placeholder="Confirm new password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          showPassword={showConfirmPassword}
-                          onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
-                          required
-                        />
-                      </div>
+                      <PasswordInput
+                        id="confirmPassword"
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        showPassword={showConfirmPassword}
+                        onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                        required
+                      />
                     </div>
                     
                     <Button 

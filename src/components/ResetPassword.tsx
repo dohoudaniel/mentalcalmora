@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import PasswordInput from "@/components/PasswordInput";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordStrength } from "@/utils/passwordValidation";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -52,10 +53,12 @@ const ResetPassword = () => {
       return;
     }
 
-    if (password.length < 6) {
+    // Check password strength
+    const passwordStrength = checkPasswordStrength(password);
+    if (!passwordStrength.isValid) {
       toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
+        title: "Password requirements not met",
+        description: "Please ensure your password meets all the security requirements.",
         variant: "destructive",
       });
       return;
@@ -141,6 +144,8 @@ const ResetPassword = () => {
               placeholder="Enter new password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              showStrength={true}
+              strengthRequirements={true}
               required
             />
           </div>

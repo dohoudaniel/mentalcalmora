@@ -8,8 +8,10 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PasswordInput from "@/components/PasswordInput";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordStrength } from "@/utils/passwordValidation";
+// import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  // const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +44,17 @@ const Signup = () => {
       });
       return;
     }
+
+    // Check password strength
+    const passwordStrength = checkPasswordStrength(password);
+    if (!passwordStrength.isValid) {
+      toast({
+        title: "Password requirements not met",
+        description: "Please ensure your password meets all the security requirements.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsLoading(true);
     
@@ -55,35 +68,35 @@ const Signup = () => {
     }
   };
 
-  const handleGoogleSignup = async () => {
-    setIsGoogleLoading(true);
+  // const handleGoogleSignup = async () => {
+  //   setIsGoogleLoading(true);
     
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
+  //   try {
+  //     const { error } = await supabase.auth.signInWithOAuth({
+  //       provider: 'google',
+  //       options: {
+  //         redirectTo: `${window.location.origin}/dashboard`
+  //       }
+  //     });
 
-      if (error) {
-        toast({
-          title: "Google signup failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Google signup error:', error);
-      toast({
-        title: "Google signup error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+  //     if (error) {
+  //       toast({
+  //         title: "Google signup failed",
+  //         description: error.message,
+  //         variant: "destructive",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Google signup error:', error);
+  //     toast({
+  //       title: "Google signup error",
+  //       description: "An unexpected error occurred. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsGoogleLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -100,7 +113,7 @@ const Signup = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <Button 
                 onClick={handleGoogleSignup}
                 variant="outline"
@@ -124,9 +137,9 @@ const Signup = () => {
                   <span className="bg-white px-2 text-slate-text/70">Or continue with</span>
                 </div>
               </div>
-            </div>
+            </div> */}
             
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
@@ -164,20 +177,20 @@ const Signup = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  showStrength={true}
+                  strengthRequirements={true}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
