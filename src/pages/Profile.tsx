@@ -5,12 +5,14 @@ import { useProfile } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ImageUpload from "@/components/ImageUpload";
+import PasswordInput from "@/components/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { User } from "lucide-react";
+import { User, Download } from "lucide-react";
+import { exportUserData } from "@/utils/dataExport";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
@@ -24,6 +26,7 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExportingData, setIsExportingData] = useState(false);
 
   // Update form when profile loads
   React.useEffect(() => {
@@ -111,6 +114,17 @@ const Profile = () => {
         description: "Your account has been successfully deleted.",
       });
       logout();
+    }
+  };
+
+  const handleExportData = async () => {
+    if (!currentUser) return;
+    
+    setIsExportingData(true);
+    try {
+      await exportUserData(currentUser.id);
+    } finally {
+      setIsExportingData(false);
     }
   };
 
@@ -219,9 +233,8 @@ const Profile = () => {
                   <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
-                      <Input
+                      <PasswordInput
                         id="newPassword"
-                        type="password"
                         placeholder="Enter new password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
@@ -231,9 +244,8 @@ const Profile = () => {
                     
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <Input
+                      <PasswordInput
                         id="confirmPassword"
-                        type="password"
                         placeholder="Confirm new password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -282,8 +294,14 @@ const Profile = () => {
                   <CardTitle className="text-xl text-slate-text">Data & Privacy</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button variant="link" className="p-0 h-auto">
-                    Export Your Data
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={handleExportData}
+                    disabled={isExportingData}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExportingData ? "Exporting..." : "Export Your Data"}
                   </Button>
                   <Button variant="link" className="p-0 h-auto">
                     Privacy Policy
