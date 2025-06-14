@@ -25,27 +25,32 @@ const Dashboard = () => {
       <Navbar />
       
       <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist dark:bg-slate-text/90">
-        <div className="container mx-auto">
-          <div className="flex flex-col lg:flex-row items-start gap-8">
-            {/* Left Column */}
-            <div className="w-full lg:w-1/3 space-y-8">
-              <div className="bg-white dark:bg-slate-text p-4 rounded-lg shadow-md">
-                <h1 className="text-2xl font-bold text-slate-text dark:text-mint-mist mb-1">
-                  Welcome back!
-                </h1>
-                <p className="text-slate-text/80 dark:text-mint-mist/80">
-                  How are you feeling today?
-                </p>
-              </div>
-              
-              <MoodForm />
-              
+        <div className="container mx-auto space-y-8">
+          {/* Welcome Section */}
+          <div className="bg-white dark:bg-slate-text p-6 rounded-lg shadow-md">
+            <h1 className="text-3xl font-bold text-slate-text dark:text-mint-mist mb-2">
+              Welcome back!
+            </h1>
+            <p className="text-slate-text/80 dark:text-mint-mist/80 text-lg">
+              How are you feeling today?
+            </p>
+          </div>
+
+          {/* Mood Form Section */}
+          <div className="w-full max-w-2xl mx-auto">
+            <MoodForm />
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid gap-8 lg:grid-cols-2">
+            {/* Left Column - Recent Entries */}
+            <div className="space-y-6">
               <Card className="bg-white dark:bg-slate-text shadow-md">
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle className="text-xl text-slate-text dark:text-mint-mist">Recent Entries</CardTitle>
+                    <CardTitle className="text-2xl text-slate-text dark:text-mint-mist">Recent Entries</CardTitle>
                     <Link to="/history">
-                      <Button variant="ghost" size="sm" className="text-leaf-green flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="text-leaf-green flex items-center gap-2">
                         <History className="h-4 w-4" />
                         View all
                       </Button>
@@ -60,22 +65,28 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-slate-text/80 dark:text-mint-mist/80 text-center py-4">
-                      No mood entries yet. Add your first mood above!
-                    </p>
+                    <div className="text-center py-8">
+                      <p className="text-slate-text/80 dark:text-mint-mist/80 text-lg mb-4">
+                        No mood entries yet.
+                      </p>
+                      <p className="text-slate-text/60 dark:text-mint-mist/60">
+                        Add your first mood above to start tracking your emotional journey!
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
             </div>
             
-            {/* Right Column */}
-            <div className="w-full lg:w-2/3 space-y-8 mt-8 lg:mt-0">
-              <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-1">
-                <MoodChart />
-              </div>
-              
-              <RecommendationList />
+            {/* Right Column - Chart */}
+            <div className="space-y-6">
+              <MoodChart />
             </div>
+          </div>
+
+          {/* Recommendations Section */}
+          <div className="w-full">
+            <RecommendationList />
           </div>
         </div>
       </main>
