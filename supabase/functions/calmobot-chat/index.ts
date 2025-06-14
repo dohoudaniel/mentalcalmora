@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,18 +20,22 @@ serve(async (req) => {
 
     console.log('Calmobot chat request received');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are Calmobot, an AI wellness assistant integrated into Calmora - a mood tracking and wellness application. Your purpose is to:
+    // Convert messages to Gemini format
+    const geminiMessages = messages.map((msg: any) => {
+      if (msg.role === 'system') {
+        return {
+          role: 'user',
+          parts: [{ text: `System: ${msg.content}` }]
+        };
+      }
+      return {
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      };
+    });
+
+    // Add system prompt as first message if not present
+    const systemPrompt = `You are Calmobot, an AI wellness assistant integrated into Calmora - a mood tracking and wellness application. Your purpose is to:
 
 1. Help users understand and process their emotions and moods
 2. Provide supportive, empathetic responses to mood-related concerns
@@ -49,23 +53,38 @@ Guidelines:
 - Focus on emotional wellness, mood management, and general health tips
 - Be encouraging and supportive while maintaining appropriate boundaries
 
-Remember: You're part of the Calmora wellness ecosystem, so feel free to reference mood tracking, wellness journeys, and the importance of self-care.`
-          },
-          ...messages
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
+Remember: You're part of the Calmora wellness ecosystem, so feel free to reference mood tracking, wellness journeys, and the importance of self-care.`;
+
+    // Ensure system prompt is included
+    if (geminiMessages.length === 0 || !geminiMessages[0].parts[0].text.includes('System:')) {
+      geminiMessages.unshift({
+        role: 'user',
+        parts: [{ text: `System: ${systemPrompt}` }]
+      });
+    }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: geminiMessages,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        },
       }),
     });
 
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('OpenAI API error:', data);
-      throw new Error(data.error?.message || 'OpenAI API request failed');
+      console.error('Gemini API error:', data);
+      throw new Error(data.error?.message || 'Gemini API request failed');
     }
 
-    const assistantMessage = data.choices[0].message.content;
+    const assistantMessage = data.candidates[0].content.parts[0].text;
 
     console.log('Calmobot response generated successfully');
 

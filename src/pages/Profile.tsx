@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -12,8 +11,8 @@ import { User } from "lucide-react";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
-  const [firstName, setFirstName] = useState(currentUser?.firstName || "");
-  const [lastName, setLastName] = useState(currentUser?.lastName || "");
+  const [firstName, setFirstName] = useState(currentUser?.user_metadata?.firstName || "");
+  const [lastName, setLastName] = useState(currentUser?.user_metadata?.lastName || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
