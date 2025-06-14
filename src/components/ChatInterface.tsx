@@ -6,6 +6,7 @@ import { Send, Bot, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMood } from "@/contexts/MoodContext";
 
 interface Message {
   id: string;
@@ -16,6 +17,7 @@ interface Message {
 
 const ChatInterface = () => {
   const { currentUser } = useAuth();
+  const { entries } = useMood();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -76,10 +78,11 @@ const ChatInterface = () => {
         setMessages(chatHistory);
       } else {
         // Show welcome message for new users
+        const userName = currentUser.user_metadata?.first_name || 'there';
         setMessages([{
           id: '1',
           role: 'assistant',
-          content: "Hello! I'm Calmobot, your AI wellness companion. I'm here to help you understand your moods, provide emotional support, and offer wellness advice. How are you feeling today?",
+          content: `Hello ${userName}! I'm Calmobot, your AI wellness companion. I can see your mood history and provide personalized support based on your wellness journey. How are you feeling today?`,
           timestamp: new Date()
         }]);
       }
@@ -185,8 +188,30 @@ const ChatInterface = () => {
         content: msg.content
       }));
 
+      // Prepare user data to send to the chatbot
+      const userData = currentUser ? {
+        id: currentUser.id,
+        firstName: currentUser.user_metadata?.first_name,
+        lastName: currentUser.user_metadata?.last_name,
+        email: currentUser.email
+      } : null;
+
+      // Get the last 5 mood entries for context
+      const recentMoodEntries = entries.slice(0, 5).map(entry => ({
+        mood: entry.mood,
+        description: entry.description,
+        sentiment: entry.sentiment,
+        score: entry.score,
+        timestamp: entry.timestamp,
+        insights: entry.insights
+      }));
+
       const { data, error } = await supabase.functions.invoke('calmobot-chat', {
-        body: { messages: conversationHistory }
+        body: { 
+          messages: conversationHistory,
+          userData,
+          moodEntries: recentMoodEntries
+        }
       });
 
       if (error) {

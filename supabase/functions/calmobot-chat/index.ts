@@ -16,9 +16,11 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, userData, moodEntries } = await req.json();
 
     console.log('Calmobot chat request received');
+    console.log('User data:', userData);
+    console.log('Mood entries count:', moodEntries?.length || 0);
 
     // Convert messages to Gemini format
     const geminiMessages = messages.map((msg: any) => {
@@ -34,8 +36,8 @@ serve(async (req) => {
       };
     });
 
-    // Add system prompt as first message if not present
-    const systemPrompt = `You are Calmobot, an AI wellness assistant integrated into Calmora - a mood tracking and wellness application. Your purpose is to:
+    // Create personalized system prompt
+    let systemPrompt = `You are Calmobot, an AI wellness assistant integrated into Calmora - a mood tracking and wellness application. Your purpose is to:
 
 1. Help users understand and process their emotions and moods
 2. Provide supportive, empathetic responses to mood-related concerns
@@ -45,6 +47,8 @@ serve(async (req) => {
 
 Guidelines:
 - Always be warm, empathetic, and non-judgmental
+- Use the user's name when appropriate to personalize responses
+- Reference their mood history when relevant to provide context-aware advice
 - Encourage users to track their moods regularly in Calmora
 - Suggest practical coping strategies like breathing exercises, journaling, physical activity
 - Remind users that you're not a replacement for professional medical or mental health care
@@ -54,6 +58,31 @@ Guidelines:
 - Be encouraging and supportive while maintaining appropriate boundaries
 
 Remember: You're part of the Calmora wellness ecosystem, so feel free to reference mood tracking, wellness journeys, and the importance of self-care.`;
+
+    // Add personalized context if user data is available
+    if (userData) {
+      systemPrompt += `\n\nUser Information:
+- Name: ${userData.firstName} ${userData.lastName || ''}
+- First Name: ${userData.firstName}`;
+
+      if (moodEntries && moodEntries.length > 0) {
+        systemPrompt += `\n\nRecent Mood History (last ${moodEntries.length} entries):`;
+        moodEntries.forEach((entry: any, index: number) => {
+          const date = new Date(entry.timestamp).toLocaleDateString();
+          systemPrompt += `\n${index + 1}. ${date}: Mood "${entry.mood}", Sentiment: ${entry.sentiment}, Score: ${entry.score}/1.0`;
+          if (entry.description) {
+            systemPrompt += `, Description: "${entry.description}"`;
+          }
+          if (entry.insights) {
+            systemPrompt += `, Insights: "${entry.insights}"`;
+          }
+        });
+        
+        systemPrompt += `\n\nUse this mood history to provide personalized insights and recommendations. Reference specific patterns, improvements, or concerns you notice in their mood journey.`;
+      } else {
+        systemPrompt += `\n\nThis user hasn't recorded any mood entries yet. Encourage them to start tracking their moods in Calmora for better personalized support.`;
+      }
+    }
 
     // Ensure system prompt is included
     if (geminiMessages.length === 0 || !geminiMessages[0].parts[0].text.includes('System:')) {
