@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Send, Bot, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
   id: string;
@@ -15,16 +16,11 @@ interface Message {
 }
 
 const ChatInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hello! I'm Calmobot, your AI wellness companion. I'm here to help you understand your moods, provide emotional support, and offer wellness advice. How are you feeling today?",
-      timestamp: new Date()
-    }
-  ]);
+  const { currentUser } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -34,6 +30,87 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load chat history when component mounts
+  useEffect(() => {
+    if (currentUser) {
+      loadChatHistory();
+    } else {
+      // Show welcome message for non-authenticated users
+      setMessages([{
+        id: '1',
+        role: 'assistant',
+        content: "Hello! I'm Calmobot, your AI wellness companion. I'm here to help you understand your moods, provide emotional support, and offer wellness advice. How are you feeling today?",
+        timestamp: new Date()
+      }]);
+      setIsLoadingHistory(false);
+    }
+  }, [currentUser]);
+
+  const loadChatHistory = async () => {
+    if (!currentUser) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('timestamp', { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat history:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load chat history.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const chatHistory = data.map(msg => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(chatHistory);
+      } else {
+        // Show welcome message for new users
+        setMessages([{
+          id: '1',
+          role: 'assistant',
+          content: "Hello! I'm Calmobot, your AI wellness companion. I'm here to help you understand your moods, provide emotional support, and offer wellness advice. How are you feeling today?",
+          timestamp: new Date()
+        }]);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const saveMessageToDatabase = async (message: Message) => {
+    if (!currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          user_id: currentUser.id,
+          role: message.role,
+          content: message.content,
+          timestamp: message.timestamp.toISOString()
+        });
+
+      if (error) {
+        console.error('Error saving message:', error);
+      }
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
 
   // Function to format AI response text
   const formatMessage = (content: string) => {
@@ -86,6 +163,11 @@ const ChatInterface = () => {
     setInput("");
     setIsLoading(true);
 
+    // Save user message to database
+    if (currentUser) {
+      await saveMessageToDatabase(userMessage);
+    }
+
     try {
       const conversationHistory = [...messages, userMessage].map(msg => ({
         role: msg.role,
@@ -108,6 +190,11 @@ const ChatInterface = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Save assistant message to database
+      if (currentUser) {
+        await saveMessageToDatabase(assistantMessage);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -126,6 +213,19 @@ const ChatInterface = () => {
       handleSendMessage();
     }
   };
+
+  if (isLoadingHistory) {
+    return (
+      <div className="flex flex-col h-[600px] bg-white dark:bg-slate-text/90 rounded-lg shadow-lg items-center justify-center">
+        <div className="flex space-x-1">
+          <div className="w-2 h-2 bg-leaf-green rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-leaf-green rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+          <div className="w-2 h-2 bg-leaf-green rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        </div>
+        <p className="mt-4 text-slate-text dark:text-mint-mist">Loading your chat history...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[600px] bg-white dark:bg-slate-text/90 rounded-lg shadow-lg">
