@@ -169,7 +169,7 @@ const Signup = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -179,7 +179,7 @@ const Signup = () => {
                 <Label htmlFor="password">Password</Label>
                 <PasswordInput
                   id="password"
-                  placeholder="••••••••"
+                  placeholder="••••••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   showStrength={true}
@@ -191,7 +191,7 @@ const Signup = () => {
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <PasswordInput
                   id="confirmPassword"
-                  placeholder="••••••••"
+                  placeholder="••••••••••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
