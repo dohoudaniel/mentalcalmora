@@ -26,6 +26,14 @@ export function useSupabaseAuth() {
               updateLastLogin(newSession.user.id);
             }, 0);
           }
+          
+          // Show success toast for Google login
+          if (newSession?.user?.app_metadata?.provider === 'google') {
+            toast({
+              title: "Google login successful",
+              description: "Welcome to Calmora!",
+            });
+          }
         }
       }
     );
@@ -97,7 +105,8 @@ export function useSupabaseAuth() {
           data: {
             first_name: firstName,
             last_name: lastName,
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
 
