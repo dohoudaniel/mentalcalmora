@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { MoodEntry, Recommendation } from "@/contexts/MoodContext";
 
@@ -102,6 +103,32 @@ async function generateInsightsForEntry(
   } catch (error) {
     console.error('Error generating insights:', error);
     // Don't throw error as this is a background operation
+  }
+}
+
+export async function generateInsightsForAllEntries(entries: MoodEntry[]): Promise<void> {
+  // Filter entries that don't have insights yet
+  const entriesWithoutInsights = entries.filter(entry => !entry.insights);
+  
+  console.log(`Generating insights for ${entriesWithoutInsights.length} entries without insights`);
+  
+  // Generate insights for each entry without insights
+  for (const entry of entriesWithoutInsights) {
+    try {
+      await generateInsightsForEntry(
+        entry.id,
+        entry.mood,
+        entry.text,
+        entry.sentiment,
+        entry.score
+      );
+      
+      // Add a small delay to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error(`Error generating insights for entry ${entry.id}:`, error);
+      // Continue with next entry even if one fails
+    }
   }
 }
 

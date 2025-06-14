@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/components/ui/use-toast";
-import { fetchUserMoodEntries, addMoodEntry as addMoodEntryToDb, fetchRecommendations } from '@/services/moodService';
+import { fetchUserMoodEntries, addMoodEntry as addMoodEntryToDb, fetchRecommendations, generateInsightsForAllEntries } from '@/services/moodService';
 
 export interface MoodEntry {
   id: string;
@@ -61,6 +62,9 @@ export function MoodProvider({ children }: MoodProviderProps) {
           // Load mood entries
           const userEntries = await fetchUserMoodEntries(currentUser.id);
           setEntries(userEntries);
+          
+          // Generate insights for entries that don't have them yet
+          await generateInsightsForAllEntries(userEntries);
           
           // Generate recommendations based on latest entry
           await generateRecommendations(userEntries);
