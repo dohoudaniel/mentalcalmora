@@ -15,6 +15,7 @@ interface Article {
   readTime: string;
   category: string;
   content: string;
+  url: string;
 }
 
 const mentalHealthArticles: Article[] = [
