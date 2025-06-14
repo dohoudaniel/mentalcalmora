@@ -36,6 +36,20 @@ const Footer = ({ className }: FooterProps) => {
                 <Link to="/signup" className="text-sm text-slate-text hover:text-leaf-green">
                   Sign Up
                 </Link>
+                <Button 
+                  asChild
+                  variant="outline" 
+                  size="sm"
+                  className="border-leaf-green text-leaf-green hover:bg-leaf-green hover:text-white"
+                >
+                  <a 
+                    href="https://linktr.ee/dohoudanielfavour/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Developer Portfolio
+                  </a>
+                </Button>
               </>
             ) : (
               <>
