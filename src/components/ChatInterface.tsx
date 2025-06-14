@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,17 +111,17 @@ const ChatInterface = () => {
     }
   };
 
-  // Function to format AI response text
+  // Enhanced function to format AI response text with proper bold handling
   const formatMessage = (content: string) => {
     return content
       .split('\n')
       .map((line, index) => {
         // Handle bullet points
-        if (line.trim().startsWith('*') || line.trim().startsWith('-')) {
+        if (line.trim().startsWith('*') && !line.trim().startsWith('**')) {
           return (
             <div key={index} className="ml-4 mb-1">
               <span className="mr-2">•</span>
-              {line.trim().substring(1).trim()}
+              {formatTextWithBold(line.trim().substring(1).trim())}
             </div>
           );
         }
@@ -130,23 +129,35 @@ const ChatInterface = () => {
         if (line.trim().match(/^\d+\./)) {
           return (
             <div key={index} className="ml-4 mb-1">
-              {line.trim()}
+              {formatTextWithBold(line.trim())}
             </div>
           );
         }
-        // Handle bold text (**text**)
-        const boldFormatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         
         // Handle empty lines
         if (line.trim() === '') {
           return <br key={index} />;
         }
         
-        // Regular paragraph
+        // Regular paragraph with bold formatting
         return (
-          <div key={index} className="mb-2" dangerouslySetInnerHTML={{ __html: boldFormatted }} />
+          <div key={index} className="mb-2">
+            {formatTextWithBold(line)}
+          </div>
         );
       });
+  };
+
+  // Helper function to format text with bold styling
+  const formatTextWithBold = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-bold">{boldText}</strong>;
+      }
+      return part;
+    });
   };
 
   const handleSendMessage = async () => {
