@@ -37,32 +37,32 @@
   }
 
   .dark {
-    --background: 220 18% 8%; /* Deep navy background */
-    --foreground: 170 30% 95%; /* Light mint text with better contrast */
+    --background: 220 13% 18%; /* Lighter charcoal background */
+    --foreground: 0 0% 98%; /* Pure white text */
 
-    --card: 220 18% 12%; /* Slightly lighter card background */
-    --card-foreground: 170 25% 92%;
+    --card: 220 13% 22%; /* Slightly lighter card background */
+    --card-foreground: 0 0% 98%; /* Pure white text on cards */
 
-    --popover: 220 18% 14%; /* Popover background */
-    --popover-foreground: 170 25% 92%;
+    --popover: 220 13% 20%; /* Popover background */
+    --popover-foreground: 0 0% 98%; /* Pure white text in popovers */
 
     --primary: 164 60% 55%; /* Vibrant leaf green */
-    --primary-foreground: 220 18% 8%;
+    --primary-foreground: 0 0% 98%; /* White text on primary */
 
-    --secondary: 256 35% 35%; /* Rich purple/lavender */
-    --secondary-foreground: 170 25% 92%;
+    --secondary: 256 30% 45%; /* Lighter purple/lavender */
+    --secondary-foreground: 0 0% 98%; /* White text on secondary */
 
-    --muted: 220 18% 18%; /* Muted backgrounds */
-    --muted-foreground: 170 15% 75%;
+    --muted: 220 13% 25%; /* Lighter muted backgrounds */
+    --muted-foreground: 0 0% 85%; /* Light gray text for muted */
 
-    --accent: 199 50% 60%; /* Balanced sky blue */
-    --accent-foreground: 220 18% 8%;
+    --accent: 199 45% 65%; /* Softer sky blue */
+    --accent-foreground: 0 0% 98%; /* White text on accent */
 
-    --destructive: 0 70% 65%;
-    --destructive-foreground: 220 18% 8%;
+    --destructive: 0 65% 70%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 18% 22%; /* Subtle border */
-    --input: 220 18% 15%; /* Input background */
+    --border: 220 13% 30%; /* Lighter border */
+    --input: 220 13% 20%; /* Input background */
     --ring: 164 60% 55%;
   }
 }
@@ -76,6 +76,15 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Ensure all text is white in dark mode */
+  .dark {
+    color: hsl(0 0% 98%);
+  }
+
+  .dark * {
+    color: inherit;
   }
 
   /* Improve dark mode card styling */
@@ -115,11 +124,11 @@
 
   /* Improve shadow in dark mode */
   .dark .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   }
 
   .dark .calmora-shadow {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   }
 
   /* Improve dropdown and popover backgrounds */
@@ -127,21 +136,12 @@
     z-index: 50;
   }
 
-  /* Better text contrast for dark mode */
-  .dark .text-gray-600 {
-    @apply text-muted-foreground;
-  }
-
-  .dark .text-gray-700 {
-    @apply text-foreground;
-  }
-
-  .dark .text-gray-800 {
-    @apply text-foreground;
-  }
-
+  /* Force white text for all common text classes in dark mode */
+  .dark .text-gray-600,
+  .dark .text-gray-700,
+  .dark .text-gray-800,
   .dark .text-gray-900 {
-    @apply text-foreground;
+    color: hsl(0 0% 98%) !important;
   }
 
   /* Improve hover states in dark mode */
@@ -151,6 +151,28 @@
 
   .dark .hover\:bg-gray-100:hover {
     @apply hover:bg-muted;
+  }
+
+  /* Ensure headings are white in dark mode */
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6 {
+    color: hsl(0 0% 98%) !important;
+  }
+
+  /* Ensure paragraphs and spans are white in dark mode */
+  .dark p,
+  .dark span,
+  .dark div {
+    color: hsl(0 0% 98%);
+  }
+
+  /* Ensure labels are white in dark mode */
+  .dark label {
+    color: hsl(0 0% 98%) !important;
   }
 }
 
@@ -178,7 +200,7 @@
 
   /* Improve hover effect in dark mode */
   .dark .calmora-card-hover:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   }
 
   /* Custom scrollbar for dark mode */
