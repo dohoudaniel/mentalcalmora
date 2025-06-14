@@ -85,7 +85,17 @@ export function useProfile() {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.id}/avatar.${fileExt}`;
+      const fileName = `${currentUser.id}/avatar-${Date.now()}.${fileExt}`;
+
+      // Delete old avatar if exists
+      if (profile?.avatar_url) {
+        const oldFileName = profile.avatar_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('profile-images')
+            .remove([`${currentUser.id}/${oldFileName}`]);
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('profile-images')
@@ -106,9 +116,12 @@ export function useProfile() {
 
       const avatarUrl = data.publicUrl;
 
-      await updateProfile({ avatar_url: avatarUrl });
+      const updateResult = await updateProfile({ avatar_url: avatarUrl });
+      if (updateResult) {
+        return avatarUrl;
+      }
       
-      return avatarUrl;
+      return null;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({

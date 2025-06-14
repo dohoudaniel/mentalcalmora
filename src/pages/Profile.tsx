@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -10,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { User, Download } from "lucide-react";
+import { User, Download, FileText, FileJson } from "lucide-react";
 import { exportUserData } from "@/utils/dataExport";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
-  const { profile, loading, updateProfile, uploadAvatar, changePassword } = useProfile();
+  const { profile, loading, updateProfile, uploadAvatar, changePassword, refetch } = useProfile();
   
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -24,6 +24,9 @@ const Profile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'json' | 'pdf'>('json');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
@@ -122,10 +125,19 @@ const Profile = () => {
     
     setIsExportingData(true);
     try {
-      await exportUserData(currentUser.id);
+      await exportUserData(currentUser.id, exportFormat);
     } finally {
       setIsExportingData(false);
     }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    const result = await uploadAvatar(file);
+    if (result) {
+      // Refetch profile to get the updated avatar URL
+      await refetch();
+    }
+    return result;
   };
 
   if (loading) {
@@ -153,7 +165,7 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center gap-6">
               <ImageUpload
                 currentImageUrl={profile?.avatar_url}
-                onImageUpload={uploadAvatar}
+                onImageUpload={handleImageUpload}
                 fallbackText={`${firstName.charAt(0)}${lastName.charAt(0)}`}
               />
               <div className="text-center md:text-left">
@@ -233,24 +245,32 @@ const Profile = () => {
                   <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="newPassword">New Password</Label>
-                      <PasswordInput
-                        id="newPassword"
-                        placeholder="Enter new password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <PasswordInput
+                          id="newPassword"
+                          placeholder="Enter new password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          showPassword={showNewPassword}
+                          onTogglePassword={() => setShowNewPassword(!showNewPassword)}
+                          required
+                        />
+                      </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <PasswordInput
-                        id="confirmPassword"
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
+                      <div className="relative">
+                        <PasswordInput
+                          id="confirmPassword"
+                          placeholder="Confirm new password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          showPassword={showConfirmPassword}
+                          onTogglePassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                          required
+                        />
+                      </div>
                     </div>
                     
                     <Button 
@@ -293,7 +313,30 @@ const Profile = () => {
                 <CardHeader>
                   <CardTitle className="text-xl text-slate-text">Data & Privacy</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="exportFormat">Export Format</Label>
+                    <Select value={exportFormat} onValueChange={(value: 'json' | 'pdf') => setExportFormat(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="json">
+                          <div className="flex items-center gap-2">
+                            <FileJson className="h-4 w-4" />
+                            JSON
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="pdf">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            PDF
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
@@ -301,8 +344,9 @@ const Profile = () => {
                     disabled={isExportingData}
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    {isExportingData ? "Exporting..." : "Export Your Data"}
+                    {isExportingData ? "Exporting..." : `Export as ${exportFormat.toUpperCase()}`}
                   </Button>
+                  
                   <Button variant="link" className="p-0 h-auto">
                     Privacy Policy
                   </Button>
