@@ -106,12 +106,14 @@ const Dashboard = () => {
                     Try Calmobot AI
                   </Button>
                 </Link>
-                <Button 
-                  variant="outline" 
-                  className="flex-1 border-leaf-green text-leaf-green hover:bg-leaf-green/10"
-                >
-                  Explore Features
-                </Button>
+                <Link to="/explore" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-leaf-green text-leaf-green hover:bg-leaf-green/10"
+                  >
+                    Explore Features
+                  </Button>
+                </Link>
               </div>
             </div>
             
