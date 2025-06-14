@@ -35,6 +35,43 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Function to format AI response text
+  const formatMessage = (content: string) => {
+    return content
+      .split('\n')
+      .map((line, index) => {
+        // Handle bullet points
+        if (line.trim().startsWith('*') || line.trim().startsWith('-')) {
+          return (
+            <div key={index} className="ml-4 mb-1">
+              <span className="mr-2">•</span>
+              {line.trim().substring(1).trim()}
+            </div>
+          );
+        }
+        // Handle numbered lists
+        if (line.trim().match(/^\d+\./)) {
+          return (
+            <div key={index} className="ml-4 mb-1">
+              {line.trim()}
+            </div>
+          );
+        }
+        // Handle bold text (**text**)
+        const boldFormatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Handle empty lines
+        if (line.trim() === '') {
+          return <br key={index} />;
+        }
+        
+        // Regular paragraph
+        return (
+          <div key={index} className="mb-2" dangerouslySetInnerHTML={{ __html: boldFormatted }} />
+        );
+      });
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -113,14 +150,14 @@ const ChatInterface = () => {
                 : 'bg-gray-100 dark:bg-slate-text/50'
             }`}>
               <CardContent className="p-3">
-                <p className={`text-sm ${
+                <div className={`text-sm ${
                   message.role === 'user' 
                     ? 'text-white' 
                     : 'text-slate-text dark:text-mint-mist'
                 }`}>
-                  {message.content}
-                </p>
-                <p className={`text-xs mt-1 ${
+                  {message.role === 'assistant' ? formatMessage(message.content) : message.content}
+                </div>
+                <p className={`text-xs mt-2 ${
                   message.role === 'user' 
                     ? 'text-white/70' 
                     : 'text-slate-text/50 dark:text-mint-mist/50'
