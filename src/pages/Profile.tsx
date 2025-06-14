@@ -1,48 +1,107 @@
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ImageUpload from "@/components/ImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { User } from "lucide-react";
 
 const Profile = () => {
   const { currentUser, logout } = useAuth();
-  const [firstName, setFirstName] = useState(currentUser?.user_metadata?.firstName || "");
-  const [lastName, setLastName] = useState(currentUser?.user_metadata?.lastName || "");
-  const [email, setEmail] = useState(currentUser?.email || "");
-  const [password, setPassword] = useState("");
+  const { profile, loading, updateProfile, uploadAvatar, changePassword } = useProfile();
+  
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Update form when profile loads
+  React.useEffect(() => {
+    if (profile) {
+      setFirstName(profile.first_name || "");
+      setLastName(profile.last_name || "");
+    }
+    if (currentUser) {
+      setEmail(currentUser.email || "");
+    }
+  }, [profile, currentUser]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password && password !== confirmPassword) {
+    if (!firstName || !lastName) {
       toast({
-        title: "Password mismatch",
-        description: "The passwords you entered do not match.",
+        title: "Missing information",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
     }
     
-    setIsSubmitting(true);
+    setIsUpdatingProfile(true);
     
-    // Simulated profile update
-    setTimeout(() => {
-      // In a real app, this would be an API call to update the profile
-      toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully.",
+    try {
+      await updateProfile({
+        first_name: firstName,
+        last_name: lastName,
       });
-      setIsSubmitting(false);
-      setPassword("");
-      setConfirmPassword("");
-    }, 1000);
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newPassword || !confirmPassword) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all password fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "The new passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    
+    try {
+      const success = await changePassword(newPassword);
+      if (success) {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -55,6 +114,21 @@ const Profile = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center bg-mint-mist">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto"></div>
+            <p className="mt-2 text-slate-text">Loading profile...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -62,28 +136,32 @@ const Profile = () => {
       <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist">
         <div className="container mx-auto max-w-3xl">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-lavender flex items-center justify-center text-white">
-                <User className="h-8 w-8" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-text">{firstName} {lastName}</h1>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <ImageUpload
+                currentImageUrl={profile?.avatar_url}
+                onImageUpload={uploadAvatar}
+                fallbackText={`${firstName.charAt(0)}${lastName.charAt(0)}`}
+              />
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl font-bold text-slate-text">
+                  {firstName} {lastName}
+                </h1>
                 <p className="text-slate-text/80">{email}</p>
               </div>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="col-span-2">
+            <div className="col-span-2 space-y-6">
               <Card className="bg-white shadow-md">
                 <CardHeader>
-                  <CardTitle className="text-xl text-slate-text">Update Profile</CardTitle>
+                  <CardTitle className="text-xl text-slate-text">Profile Information</CardTitle>
                   <CardDescription>
-                    Change your profile information and password
+                    Update your personal information
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name</Label>
@@ -91,6 +169,7 @@ const Profile = () => {
                           id="firstName"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
+                          required
                         />
                       </div>
                       <div className="space-y-2">
@@ -99,6 +178,7 @@ const Profile = () => {
                           id="lastName"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
+                          required
                         />
                       </div>
                     </div>
@@ -109,18 +189,43 @@ const Profile = () => {
                         id="email"
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        disabled
+                        className="bg-gray-50"
                       />
+                      <p className="text-xs text-slate-text/60">
+                        Email cannot be changed. Contact support if needed.
+                      </p>
                     </div>
                     
+                    <Button 
+                      type="submit" 
+                      className="bg-leaf-green hover:bg-leaf-green/90"
+                      disabled={isUpdatingProfile}
+                    >
+                      {isUpdatingProfile ? "Updating..." : "Update Profile"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-text">Change Password</CardTitle>
+                  <CardDescription>
+                    Update your account password
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">New Password</Label>
+                      <Label htmlFor="newPassword">New Password</Label>
                       <Input
-                        id="password"
+                        id="newPassword"
                         type="password"
-                        placeholder="Leave blank to keep current password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
                       />
                     </div>
                     
@@ -129,18 +234,19 @@ const Profile = () => {
                       <Input
                         id="confirmPassword"
                         type="password"
-                        placeholder="Leave blank to keep current password"
+                        placeholder="Confirm new password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
                       />
                     </div>
                     
                     <Button 
                       type="submit" 
                       className="bg-leaf-green hover:bg-leaf-green/90"
-                      disabled={isSubmitting}
+                      disabled={isChangingPassword}
                     >
-                      {isSubmitting ? "Updating..." : "Update Profile"}
+                      {isChangingPassword ? "Changing..." : "Change Password"}
                     </Button>
                   </form>
                 </CardContent>
