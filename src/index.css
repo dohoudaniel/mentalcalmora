@@ -37,33 +37,33 @@
   }
 
   .dark {
-    --background: 207 20% 22%;
-    --foreground: 170 100% 99%;
+    --background: 207 25% 12%; /* Darker slate background */
+    --foreground: 170 100% 97%; /* Light mint text */
 
-    --card: 207 20% 18%;
-    --card-foreground: 0 0% 100%;
+    --card: 207 25% 15%; /* Slightly lighter card background */
+    --card-foreground: 170 100% 95%;
 
-    --popover: 207 20% 18%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 207 25% 16%; /* Popover background */
+    --popover-foreground: 170 100% 95%;
 
-    --primary: 164 67% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 164 67% 60%; /* Brighter leaf green for dark mode */
+    --primary-foreground: 207 25% 12%;
 
-    --secondary: 256 66% 73%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 256 50% 25%; /* Darker lavender */
+    --secondary-foreground: 170 100% 95%;
 
-    --muted: 207 20% 32%;
-    --muted-foreground: 215 20.2% 75.1%;
+    --muted: 207 25% 20%; /* Muted backgrounds */
+    --muted-foreground: 170 30% 70%;
 
-    --accent: 199 87% 66%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 199 70% 45%; /* Darker sky blue */
+    --accent-foreground: 170 100% 95%;
 
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 170 100% 95%;
 
-    --border: 207 20% 32%;
-    --input: 207 20% 32%;
-    --ring: 164 67% 53%;
+    --border: 207 25% 25%; /* Border color */
+    --input: 207 25% 22%; /* Input background */
+    --ring: 164 67% 60%;
   }
 }
 
@@ -73,8 +73,57 @@
   }
 
   body {
-    @apply bg-mint-mist text-slate-text dark:bg-slate-text dark:text-mint-mist;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Improve dark mode card styling */
+  .dark .bg-white {
+    @apply bg-card;
+  }
+
+  .dark .text-slate-text {
+    @apply text-foreground;
+  }
+
+  .dark .text-slate-text\/70 {
+    @apply text-muted-foreground;
+  }
+
+  /* Improve form styling in dark mode */
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="text"] {
+    @apply bg-input border-border text-foreground placeholder:text-muted-foreground;
+  }
+
+  /* Improve button styling in dark mode */
+  .dark .bg-leaf-green {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .dark .hover\:bg-leaf-green\/90:hover {
+    @apply hover:bg-primary/90;
+  }
+
+  /* Improve navigation and footer in dark mode */
+  .dark .bg-mint-mist {
+    @apply bg-background;
+  }
+
+  /* Improve shadow in dark mode */
+  .dark .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .calmora-shadow {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Improve dropdown and popover backgrounds */
+  .dark [data-radix-popper-content-wrapper] {
+    z-index: 50;
   }
 }
 
@@ -87,12 +136,40 @@
     background: linear-gradient(120deg, #37D69C 0%, #8FD5F8 100%);
   }
 
+  /* Dark mode gradient */
+  .dark .calmora-gradient {
+    background: linear-gradient(120deg, #37D69C 0%, #5BA3D1 100%);
+  }
+
   .calmora-card-hover {
     transition: all 0.3s ease;
   }
   
   .calmora-card-hover:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(46, 58, 68, 0.15);
+  }
+
+  /* Improve hover effect in dark mode */
+  .dark .calmora-card-hover:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Custom scrollbar for dark mode */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent));
   }
 }
