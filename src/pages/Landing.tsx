@@ -121,7 +121,7 @@ const Landing = () => {
         </section>
         
         {/* Testimonial Section */}
-        <section className="py-16 bg-gradient-to-b from-white to-mint-mist">
+        <section className="py-16 bg-gradient-to-b from-white to-mint-mist dark:from-background dark:to-background">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-slate-text dark:text-foreground mb-4">
@@ -133,47 +133,47 @@ const Landing = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-md">
+              <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="h-12 w-12 rounded-full bg-lavender/30 flex items-center justify-center">
                     <span className="text-lg">JM</span>
                   </div>
                   <div className="ml-4">
-                    <h3 className="font-medium text-slate-text">Jamie M.</h3>
-                    <p className="text-xs text-slate-text/70">Using Calmora for 3 months</p>
+                    <h3 className="font-medium text-slate-text dark:text-foreground">Jamie M.</h3>
+                    <p className="text-xs text-slate-text/70 dark:text-muted-foreground">Using Calmora for 3 months</p>
                   </div>
                 </div>
-                <p className="text-slate-text">
+                <p className="text-slate-text dark:text-foreground">
                   "Tracking my moods daily has helped me notice patterns I never saw before. The recommendations are always spot-on."
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-xl shadow-md">
+              <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="h-12 w-12 rounded-full bg-sky-blue/30 flex items-center justify-center">
                     <span className="text-lg">ST</span>
                   </div>
                   <div className="ml-4">
-                    <h3 className="font-medium text-slate-text">Sam T.</h3>
-                    <p className="text-xs text-slate-text/70">Using Calmora for 6 months</p>
+                    <h3 className="font-medium text-slate-text dark:text-foreground">Sam T.</h3>
+                    <p className="text-xs text-slate-text/70 dark:text-muted-foreground">Using Calmora for 6 months</p>
                   </div>
                 </div>
-                <p className="text-slate-text">
+                <p className="text-slate-text dark:text-foreground">
                   "The AI analysis gives me actionable insights that have genuinely improved my mental health. I'm much more aware of my emotions now."
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-xl shadow-md">
+              <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="h-12 w-12 rounded-full bg-leaf-green/30 flex items-center justify-center">
                     <span className="text-lg">LK</span>
                   </div>
                   <div className="ml-4">
-                    <h3 className="font-medium text-slate-text">Lee K.</h3>
-                    <p className="text-xs text-slate-text/70">Using Calmora for 2 months</p>
+                    <h3 className="font-medium text-slate-text dark:text-foreground">Lee K.</h3>
+                    <p className="text-xs text-slate-text/70 dark:text-muted-foreground">Using Calmora for 2 months</p>
                   </div>
                 </div>
-                <p className="text-slate-text">
+                <p className="text-slate-text dark:text-foreground">
                   "I love how Calmora doesn't just track my mood but gives me practical tips to improve it. It's like having a wellness coach in my pocket."
                 </p>
               </div>
