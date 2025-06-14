@@ -37,6 +37,7 @@ export type Database = {
         Row: {
           description: string | null
           id: string
+          insights: string | null
           mood: string
           score: number
           sentiment: string
@@ -47,6 +48,7 @@ export type Database = {
         Insert: {
           description?: string | null
           id?: string
+          insights?: string | null
           mood: string
           score: number
           sentiment: string
@@ -57,6 +59,7 @@ export type Database = {
         Update: {
           description?: string | null
           id?: string
+          insights?: string | null
           mood?: string
           score?: number
           sentiment?: string

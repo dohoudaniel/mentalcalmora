@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { MoodEntry, Recommendation } from "@/contexts/MoodContext";
 
@@ -23,7 +22,8 @@ export async function fetchUserMoodEntries(userId: string): Promise<MoodEntry[]>
       text: entry.text,
       sentiment: entry.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
       score: entry.score,
-      timestamp: entry.timestamp
+      timestamp: entry.timestamp,
+      insights: entry.insights || undefined
     }));
   } catch (error) {
     console.error('Failed to fetch mood entries:', error);
@@ -60,7 +60,7 @@ export async function addMoodEntry(
       return null;
     }
     
-    return {
+    const moodEntry: MoodEntry = {
       id: data.id,
       userId: data.user_id,
       mood: data.mood,
@@ -68,11 +68,40 @@ export async function addMoodEntry(
       text: data.text,
       sentiment: data.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
       score: data.score,
-      timestamp: data.timestamp
+      timestamp: data.timestamp,
+      insights: data.insights || undefined
     };
+
+    // Generate insights for the new entry in the background
+    generateInsightsForEntry(data.id, mood, text, sentiment, score);
+    
+    return moodEntry;
   } catch (error) {
     console.error('Failed to add mood entry:', error);
     return null;
+  }
+}
+
+async function generateInsightsForEntry(
+  entryId: string,
+  mood: string,
+  text: string,
+  sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
+  score: number
+) {
+  try {
+    await supabase.functions.invoke('generate-insights', {
+      body: {
+        entryId,
+        mood,
+        text,
+        sentiment,
+        score
+      }
+    });
+  } catch (error) {
+    console.error('Error generating insights:', error);
+    // Don't throw error as this is a background operation
   }
 }
 

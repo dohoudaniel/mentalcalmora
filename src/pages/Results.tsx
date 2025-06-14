@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useMood, MoodEntry, Recommendation } from "@/contexts/MoodContext";
@@ -7,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { ArrowLeft, Heart, Calendar, Book, User } from "lucide-react";
+import { ArrowLeft, Heart, Calendar, Book, User, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -48,7 +47,8 @@ const Results = () => {
             text: data.text,
             sentiment: data.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
             score: data.score,
-            timestamp: data.timestamp
+            timestamp: data.timestamp,
+            insights: data.insights || undefined
           };
           
           setEntry(moodEntry);
@@ -238,6 +238,18 @@ const Results = () => {
                   </div>
                 </div>
               </div>
+
+              {entry.insights && (
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-leaf-green/5 to-sky-blue/5 dark:from-leaf-green/10 dark:to-sky-blue/10 border border-leaf-green/20">
+                  <h3 className="font-medium text-slate-text dark:text-mint-mist mb-2 flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-leaf-green" />
+                    Personalized Insights
+                  </h3>
+                  <p className="text-slate-text/90 dark:text-mint-mist/90 whitespace-pre-wrap">
+                    {entry.insights}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
           

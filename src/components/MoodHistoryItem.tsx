@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { MoodEntry } from "@/contexts/MoodContext";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { Lightbulb } from "lucide-react";
 
 interface MoodHistoryItemProps {
   entry: MoodEntry;
@@ -24,7 +25,6 @@ const MoodHistoryItem = ({ entry, showLink = true }: MoodHistoryItemProps) => {
     }
   };
   
-  // Function to get background color based on sentiment
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case 'POSITIVE': return 'bg-gradient-to-r from-leaf-green/10 to-sky-blue/10 dark:from-leaf-green/20 dark:to-sky-blue/20';
@@ -67,6 +67,22 @@ const MoodHistoryItem = ({ entry, showLink = true }: MoodHistoryItemProps) => {
         <p className="mt-2 text-sm text-slate-text dark:text-mint-mist/90">
           {entry.text}
         </p>
+      )}
+
+      {entry.insights && (
+        <div className="mt-3 p-3 rounded-md bg-white/50 dark:bg-slate-text/20 border-l-4 border-leaf-green">
+          <div className="flex items-start gap-2">
+            <Lightbulb className="h-4 w-4 text-leaf-green mt-0.5 flex-shrink-0" />
+            <div>
+              <h5 className="text-sm font-medium text-slate-text dark:text-mint-mist mb-1">
+                Personalized Insight
+              </h5>
+              <p className="text-sm text-slate-text/80 dark:text-mint-mist/80">
+                {entry.insights}
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

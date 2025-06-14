@@ -1,18 +1,18 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { fetchUserMoodEntries, addMoodEntry as addMoodEntryToDb, fetchRecommendations } from '@/services/moodService';
 
 export interface MoodEntry {
-  id: string | number;
+  id: string;
   userId: string;
-  text: string;
   mood: string;
   description?: string;
+  text: string;
   sentiment: 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL';
   score: number;
   timestamp: string;
+  insights?: string;
 }
 
 export interface Recommendation {
