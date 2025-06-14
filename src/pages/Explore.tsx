@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -26,7 +25,8 @@ const mentalHealthArticles: Article[] = [
     author: "Dr. Sarah Chen",
     readTime: "5 min read",
     category: "Mindfulness",
-    content: "Mindfulness is the practice of being present in the moment..."
+    content: "Mindfulness is the practice of being present in the moment...",
+    url: "https://www.mindful.org/how-to-meditate/"
   },
   {
     id: "2",
@@ -35,7 +35,8 @@ const mentalHealthArticles: Article[] = [
     author: "Michael Rodriguez",
     readTime: "7 min read",
     category: "Workplace Wellness",
-    content: "Mental health in the workplace is a critical issue..."
+    content: "Mental health in the workplace is a critical issue...",
+    url: "https://www.who.int/news-room/fact-sheets/detail/mental-disorders"
   },
   {
     id: "3",
@@ -44,7 +45,8 @@ const mentalHealthArticles: Article[] = [
     author: "Dr. Emily Watson",
     readTime: "6 min read",
     category: "Sleep & Wellness",
-    content: "Sleep plays a crucial role in mental health..."
+    content: "Sleep plays a crucial role in mental health...",
+    url: "https://www.sleepfoundation.org/mental-health"
   },
   {
     id: "4",
@@ -53,7 +55,8 @@ const mentalHealthArticles: Article[] = [
     author: "James Thompson",
     readTime: "8 min read",
     category: "Resilience",
-    content: "Resilience is not just about bouncing back..."
+    content: "Resilience is not just about bouncing back...",
+    url: "https://www.apa.org/topics/resilience"
   },
   {
     id: "5",
@@ -62,7 +65,8 @@ const mentalHealthArticles: Article[] = [
     author: "Dr. Lisa Park",
     readTime: "5 min read",
     category: "Relationships",
-    content: "Human connection is fundamental to our well-being..."
+    content: "Human connection is fundamental to our well-being...",
+    url: "https://www.mentalhealth.gov/basics/what-is-mental-health"
   },
   {
     id: "6",
@@ -71,7 +75,8 @@ const mentalHealthArticles: Article[] = [
     author: "Dr. Alex Morgan",
     readTime: "9 min read",
     category: "Anxiety Management",
-    content: "Anxiety is a normal part of life, but when it becomes overwhelming..."
+    content: "Anxiety is a normal part of life, but when it becomes overwhelming...",
+    url: "https://www.nimh.nih.gov/health/topics/anxiety-disorders"
   }
 ];
 
@@ -95,6 +100,10 @@ const Explore = () => {
   const filteredArticles = selectedCategory === "All" 
     ? articles 
     : articles.filter(article => article.category === selectedCategory);
+
+  const handleArticleClick = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -170,7 +179,12 @@ const Explore = () => {
                       <User className="h-3 w-3" />
                       {article.author}
                     </div>
-                    <Button size="sm" variant="ghost" className="text-leaf-green hover:bg-leaf-green/10 p-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-leaf-green hover:bg-leaf-green/10 p-2"
+                      onClick={() => handleArticleClick(article.url)}
+                    >
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
