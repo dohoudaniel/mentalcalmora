@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, History, User, LogOut } from "lucide-react";
+import { Menu, X, Home, History, User, LogOut, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -38,6 +38,13 @@ export default function Navbar() {
                   >
                     <History className="h-4 w-4" />
                     History
+                  </Link>
+                  <Link 
+                    to="/chatbot" 
+                    className="text-slate-text dark:text-mint-mist hover:text-leaf-green dark:hover:text-leaf-green px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
+                  >
+                    <Bot className="h-4 w-4" />
+                    Calmobot
                   </Link>
                   <Link 
                     to="/profile" 
@@ -107,6 +114,13 @@ export default function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 History
+              </Link>
+              <Link
+                to="/chatbot"
+                className="text-slate-text dark:text-mint-mist hover:bg-lavender hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Calmobot
               </Link>
               <Link
                 to="/profile"

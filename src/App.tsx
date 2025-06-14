@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Results from "./pages/Results";
 import Profile from "./pages/Profile";
+import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,12 @@ const AppRoutes = () => {
       <Route path="/history" element={
         <ProtectedRoute>
           <History />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/chatbot" element={
+        <ProtectedRoute>
+          <Chatbot />
         </ProtectedRoute>
       } />
       
