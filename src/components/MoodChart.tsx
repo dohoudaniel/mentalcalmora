@@ -61,6 +61,18 @@ const MoodChart = () => {
               <Tooltip 
                 formatter={(value) => [`Mood score: ${Number(value).toFixed(2)}`, 'Score']}
                 labelFormatter={(label) => `Date: ${label}`}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  color: 'hsl(var(--popover-foreground))',
+                  fontSize: '14px',
+                  padding: '8px 12px'
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--popover-foreground))',
+                  fontWeight: '500'
+                }}
               />
               <Line
                 type="monotone"
