@@ -172,13 +172,18 @@ export function useSupabaseAuth() {
 
   const logout = async () => {
     try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error('Logout error:', error);
+        // Even if there's an error, we've cleared local state
         toast({
-          title: "Logout failed",
-          description: error.message,
-          variant: "destructive"
+          title: "Logged out",
+          description: "You have been logged out.",
         });
         return;
       }
@@ -189,10 +194,12 @@ export function useSupabaseAuth() {
       });
     } catch (error) {
       console.error('Logout error:', error);
+      // Clear local state even on error
+      setUser(null);
+      setSession(null);
       toast({
-        title: "Logout error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
+        title: "Logged out",
+        description: "You have been logged out.",
       });
     }
   };

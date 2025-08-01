@@ -47,15 +47,11 @@ serve(async (req) => {
 
     console.log(`Checking if user exists with email: ${email}`);
 
-    // Check if user exists in the profiles table (which is created when a user signs up)
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', `(SELECT id FROM auth.users WHERE email = '${email}')`)
-      .single();
+    // Check if user exists by querying auth.users directly with admin client
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(email);
 
-    if (profileError && profileError.code !== 'PGRST116') {
-      console.error('Error checking user existence:', profileError);
+    if (authError && authError.message !== 'User not found') {
+      console.error('Error checking user existence:', authError);
       return new Response(
         JSON.stringify({ error: 'Failed to check user existence' }),
         { 
@@ -65,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    const userExists = !!profile;
+    const userExists = !!authUser.user;
 
     console.log(`User exists: ${userExists}`);
 
