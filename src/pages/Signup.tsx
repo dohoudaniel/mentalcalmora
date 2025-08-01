@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,16 @@ import { checkPasswordStrength } from "@/utils/passwordValidation";
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, isAuthenticated, loading } = useAuth();
+  
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate, loading]);
+
+  // Show nothing while loading to avoid flicker
+  if (loading) return null;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
