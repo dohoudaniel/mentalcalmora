@@ -98,6 +98,31 @@ export function useSupabaseAuth() {
 
   const signup = async (firstName: string, lastName: string, email: string, password: string) => {
     try {
+      // First check if user already exists
+      const { data: checkResult, error: checkError } = await supabase.functions.invoke('check-user-exists', {
+        body: { email }
+      });
+
+      if (checkError) {
+        console.error('Error checking user existence:', checkError);
+        toast({
+          title: "Signup error",
+          description: "Unable to verify email availability. Please try again.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (checkResult?.exists) {
+        toast({
+          title: "User already exists",
+          description: "An account with this email already exists. Please try logging in instead.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Proceed with signup if user doesn't exist
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -111,11 +136,20 @@ export function useSupabaseAuth() {
       });
 
       if (error) {
-        toast({
-          title: "Signup failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        // Handle specific error cases
+        if (error.message.includes('already registered')) {
+          toast({
+            title: "User already exists",
+            description: "An account with this email already exists. Please try logging in instead.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Signup failed",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
         return false;
       }
 
