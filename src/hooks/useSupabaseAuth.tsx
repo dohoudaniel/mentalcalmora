@@ -115,7 +115,7 @@ export function useSupabaseAuth() {
 
       if (checkResult?.exists) {
         toast({
-          title: "User already exists",
+          title: "Email already registered",
           description: "An account with this email already exists. Please try logging in instead.",
           variant: "destructive"
         });
@@ -139,7 +139,7 @@ export function useSupabaseAuth() {
         // Handle specific error cases
         if (error.message.includes('already registered')) {
           toast({
-            title: "User already exists",
+            title: "Email already registered",
             description: "An account with this email already exists. Please try logging in instead.",
             variant: "destructive"
           });

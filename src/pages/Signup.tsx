@@ -17,6 +17,13 @@ const Signup = () => {
   const navigate = useNavigate();
   const { signup, isAuthenticated, loading } = useAuth();
   
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (!loading && isAuthenticated) {
       navigate('/dashboard');
@@ -25,12 +32,6 @@ const Signup = () => {
 
   // Show nothing while loading to avoid flicker
   if (loading) return null;
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   // const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
