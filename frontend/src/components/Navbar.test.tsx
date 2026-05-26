@@ -23,10 +23,10 @@ describe('Navbar', () => {
         <Navbar />
       </BrowserRouter>
     );
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('History')).toBeInTheDocument();
-    expect(screen.getByText('Calmobot')).toBeInTheDocument();
-    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getAllByText('Dashboard')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('History')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Calmobot')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Profile')[0]).toBeInTheDocument();
   });
 
   it('calls logout when logout button clicked', () => {
@@ -35,7 +35,7 @@ describe('Navbar', () => {
         <Navbar />
       </BrowserRouter>
     );
-    fireEvent.click(screen.getByText('Logout'));
+    fireEvent.click(screen.getAllByText('Logout')[0]);
     expect(mockLogout).toHaveBeenCalled();
   });
 

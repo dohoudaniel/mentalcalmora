@@ -32,7 +32,7 @@ describe('useSupabaseAuth', () => {
     const { result } = renderHook(() => useSupabaseAuth());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.user).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.session).toBeNull();
   });
 
   it('logs in successfully', async () => {

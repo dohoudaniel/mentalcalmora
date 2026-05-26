@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { MoodProvider, useMood } from './MoodContext';
 import React from 'react';
@@ -13,11 +13,17 @@ vi.mock('@/services/moodService', () => ({
   fetchRecommendations: (...args: unknown[]) => mockFetchRecommendations(...args),
 }));
 
+const mockUser = { id: 'user-1', email: 'test@example.com' };
+
 vi.mock('./AuthContext', () => ({
   useAuth: () => ({
-    currentUser: { id: 'user-1', email: 'test@example.com' },
+    currentUser: mockUser,
     isAuthenticated: true,
   }),
+}));
+
+vi.mock('@/components/ui/use-toast', () => ({
+  toast: vi.fn(),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -25,6 +31,10 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('MoodContext', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('loads entries and recommendations on mount', async () => {
     mockFetchUserMoodEntries.mockResolvedValue([
       { id: '1', mood: 'Happy', sentiment: 'POSITIVE', score: 0.8, timestamp: new Date().toISOString() },
