@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from src.config import get_settings
 from src import db
 from src.routers import moods, chat, profile, recommendations, export
@@ -33,6 +34,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global rate limit exceeded handler
+@app.exception_handler(429)
+async def rate_limit_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Please try again later."},
+    )
 
 # Routers
 app.include_router(moods.router)

@@ -1,15 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from src.auth import get_current_user
+from src.rate_limiter import rate_limit
 from src import db
 from src.models import ProfileUpdate, ProfileOut
 from src.config import get_settings
 import httpx
 import uuid
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
-@router.get("/me", response_model=ProfileOut)
+@router.get("/me", response_model=ProfileOut, dependencies=[Depends(rate_limit(60))])
 async def get_profile(user: dict = Depends(get_current_user)):
     row = await db.fetchrow(
         "SELECT * FROM profiles WHERE id = $1",
@@ -34,9 +36,8 @@ async def get_profile(user: dict = Depends(get_current_user)):
     return dict(row)
 
 
-@router.patch("/me", response_model=ProfileOut)
+@router.patch("/me", response_model=ProfileOut, dependencies=[Depends(rate_limit(20))])
 async def update_profile(data: ProfileUpdate, user: dict = Depends(get_current_user)):
-    # Build dynamic update
     updates = []
     values = []
     idx = 1
@@ -68,7 +69,7 @@ async def update_profile(data: ProfileUpdate, user: dict = Depends(get_current_u
     return dict(row)
 
 
-@router.post("/me/avatar")
+@router.post("/me/avatar", dependencies=[Depends(rate_limit(10))])
 async def upload_avatar(
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
@@ -84,7 +85,6 @@ async def upload_avatar(
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     file_name = f"{user['id']}/avatar-{uuid.uuid4().hex}.{file_ext}"
 
-    # Upload to Supabase Storage using service role
     async with httpx.AsyncClient() as client:
         upload_resp = await client.post(
             f"{settings.supabase_url}/storage/v1/object/profile-images/{file_name}",
@@ -99,10 +99,8 @@ async def upload_avatar(
     if upload_resp.status_code not in (200, 201):
         raise HTTPException(status_code=502, detail="Failed to upload avatar")
 
-    # Get public URL
     avatar_url = f"{settings.supabase_url}/storage/v1/object/public/profile-images/{file_name}"
 
-    # Delete old avatar
     old_profile = await db.fetchrow(
         "SELECT avatar_url FROM profiles WHERE id = $1", user["id"]
     )
@@ -115,7 +113,6 @@ async def upload_avatar(
                     headers={"Authorization": f"Bearer {settings.supabase_service_role_key}"},
                 )
 
-    # Update profile
     await db.execute(
         "UPDATE profiles SET avatar_url = $1, updated_at = NOW() WHERE id = $2",
         avatar_url,
@@ -125,7 +122,7 @@ async def upload_avatar(
     return {"avatar_url": avatar_url}
 
 
-@router.post("/me/change-password")
+@router.post("/me/change-password", dependencies=[Depends(rate_limit(5))])
 async def change_password(
     new_password: str,
     user: dict = Depends(get_current_user),
@@ -146,17 +143,15 @@ async def change_password(
     return {"success": True}
 
 
-@router.delete("/me")
+@router.delete("/me", dependencies=[Depends(rate_limit(3))])
 async def delete_account(user: dict = Depends(get_current_user)):
     settings = get_settings()
     user_id = user["id"]
 
-    # Delete user's data from all tables
     await db.execute("DELETE FROM chat_messages WHERE user_id = $1", user_id)
     await db.execute("DELETE FROM mood_entries WHERE user_id = $1", user_id)
-    await db.execute("DELETE FROM profiles WHERE user_id = $1", user_id)
+    await db.execute("DELETE FROM profiles WHERE id = $1", user_id)
 
-    # Delete auth user via admin API
     async with httpx.AsyncClient() as client:
         resp = await client.delete(
             f"{settings.supabase_url}/auth/v1/admin/users/{user_id}",

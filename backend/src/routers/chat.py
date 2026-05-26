@@ -1,15 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from src.auth import get_current_user
+from src.rate_limiter import rate_limit
 from src import db
 from src.models import ChatMessageCreate, ChatMessageOut, ChatbotRequest
 from src.services.gemini import chat_with_calmobot
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-@router.get("/history", response_model=list[ChatMessageOut])
+@router.get("/history", response_model=list[ChatMessageOut], dependencies=[Depends(rate_limit(60))])
 async def get_chat_history(user: dict = Depends(get_current_user)):
     rows = await db.fetch(
         "SELECT * FROM chat_messages WHERE user_id = $1 ORDER BY timestamp ASC",
@@ -18,10 +19,10 @@ async def get_chat_history(user: dict = Depends(get_current_user)):
     return [dict(r) for r in rows]
 
 
-@router.post("/history", response_model=ChatMessageOut)
+@router.post("/history", response_model=ChatMessageOut, dependencies=[Depends(rate_limit(60))])
 async def save_message(data: ChatMessageCreate, user: dict = Depends(get_current_user)):
     msg_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     await db.execute(
         """
         INSERT INTO chat_messages (id, user_id, role, content, timestamp)
@@ -40,7 +41,7 @@ async def save_message(data: ChatMessageCreate, user: dict = Depends(get_current
     return dict(row)
 
 
-@router.post("/calmobot")
+@router.post("/calmobot", dependencies=[Depends(rate_limit(15))])
 async def calmobot_chat(data: ChatbotRequest, user: dict = Depends(get_current_user)):
     try:
         response_text = await chat_with_calmobot(

@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
 from src.auth import get_current_user
+from src.rate_limiter import rate_limit
 from src import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/export", tags=["export"])
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(rate_limit(5))])
 async def export_user_data(user: dict = Depends(get_current_user)):
     user_id = user["id"]
 
@@ -21,7 +22,7 @@ async def export_user_data(user: dict = Depends(get_current_user)):
     )
 
     return {
-        "exportDate": datetime.utcnow().isoformat(),
+        "exportDate": datetime.now(timezone.utc).isoformat(),
         "profile": dict(profile) if profile else None,
         "moodEntries": [dict(r) for r in mood_entries],
         "chatMessages": [dict(r) for r in chat_messages],

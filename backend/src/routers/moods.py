@@ -1,16 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends
 from src.auth import get_current_user
+from src.rate_limiter import rate_limit
 from src import db
 from src.models import MoodEntryCreate, MoodEntryOut
 from src.services.sentiment import analyze_sentiment
 from src.services.gemini import generate_insight
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/moods", tags=["moods"])
 
 
-@router.get("", response_model=list[MoodEntryOut])
+@router.get("", response_model=list[MoodEntryOut], dependencies=[Depends(rate_limit(60))])
 async def list_moods(user: dict = Depends(get_current_user)):
     rows = await db.fetch(
         "SELECT * FROM mood_entries WHERE user_id = $1 ORDER BY timestamp DESC",
@@ -19,13 +20,13 @@ async def list_moods(user: dict = Depends(get_current_user)):
     return [dict(r) for r in rows]
 
 
-@router.post("", response_model=MoodEntryOut)
+@router.post("", response_model=MoodEntryOut, dependencies=[Depends(rate_limit(10))])
 async def create_mood(data: MoodEntryCreate, user: dict = Depends(get_current_user)):
     text = data.description or data.mood
     sentiment_result = analyze_sentiment(text)
 
     entry_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     await db.execute(
         """
@@ -43,8 +44,6 @@ async def create_mood(data: MoodEntryCreate, user: dict = Depends(get_current_us
     )
 
     # Fire-and-forget insight generation (do not await to keep response fast)
-    # In production, use a background task queue like Celery or RQ
-    # For now, we'll generate synchronously but wrapped in try/except so it doesn't fail the request
     try:
         insight = await generate_insight(
             data.mood, text, sentiment_result["sentiment"], sentiment_result["score"]
@@ -66,7 +65,7 @@ async def create_mood(data: MoodEntryCreate, user: dict = Depends(get_current_us
     return dict(row)
 
 
-@router.get("/{entry_id}", response_model=MoodEntryOut)
+@router.get("/{entry_id}", response_model=MoodEntryOut, dependencies=[Depends(rate_limit(60))])
 async def get_mood(entry_id: str, user: dict = Depends(get_current_user)):
     row = await db.fetchrow(
         "SELECT * FROM mood_entries WHERE id = $1 AND user_id = $2",
@@ -78,7 +77,7 @@ async def get_mood(entry_id: str, user: dict = Depends(get_current_user)):
     return dict(row)
 
 
-@router.post("/{entry_id}/insights")
+@router.post("/{entry_id}/insights", dependencies=[Depends(rate_limit(10))])
 async def generate_mood_insights(entry_id: str, user: dict = Depends(get_current_user)):
     row = await db.fetchrow(
         "SELECT * FROM mood_entries WHERE id = $1 AND user_id = $2",
