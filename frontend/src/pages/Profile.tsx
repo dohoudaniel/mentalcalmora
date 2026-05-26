@@ -1,68 +1,54 @@
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ImageUpload from '@/components/ImageUpload';
+import PasswordInput from '@/components/PasswordInput';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { User, Download, FileText, FileJson } from 'lucide-react';
+import { exportUserData } from '@/utils/dataExport';
+import { checkPasswordStrength } from '@/utils/passwordValidation';
 
-import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/hooks/useProfile";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import ImageUpload from "@/components/ImageUpload";
-import PasswordInput from "@/components/PasswordInput";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
-import { User, Download, FileText, FileJson } from "lucide-react";
-import { exportUserData } from "@/utils/dataExport";
-import { checkPasswordStrength } from "@/utils/passwordValidation";
-
-const Profile = () => {
+const ProfilePage = () => {
   const { currentUser, logout } = useAuth();
-  const { profile, loading, updateProfile, uploadAvatar, changePassword, refetch } = useProfile();
-  
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const { profile, loading, updateProfile, uploadAvatar, changePassword, deleteAccount } = useProfile();
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'pdf'>('json');
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isExportingData, setIsExportingData] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Update form when profile loads
-  React.useEffect(() => {
+  const email = useMemo(() => currentUser?.email ?? '', [currentUser]);
+
+  useEffect(() => {
     if (profile) {
-      setFirstName(profile.first_name || "");
-      setLastName(profile.last_name || "");
+      setFirstName(profile.first_name || '');
+      setLastName(profile.last_name || '');
     }
-    if (currentUser) {
-      setEmail(currentUser.email || "");
-    }
-  }, [profile, currentUser]);
+  }, [profile]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!firstName || !lastName) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      toast({ title: 'Missing information', description: 'Please fill in all required fields.', variant: 'destructive' });
       return;
     }
-    
     setIsUpdatingProfile(true);
-    
     try {
-      await updateProfile({
-        first_name: firstName,
-        last_name: lastName,
-      });
+      await updateProfile({ first_name: firstName, last_name: lastName });
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -70,66 +56,50 @@ const Profile = () => {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!newPassword || !confirmPassword) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all password fields.",
-        variant: "destructive",
-      });
+      toast({ title: 'Missing information', description: 'Please fill in all password fields.', variant: 'destructive' });
       return;
     }
-    
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Password mismatch",
-        description: "The new passwords do not match.",
-        variant: "destructive",
-      });
+      toast({ title: 'Password mismatch', description: 'The new passwords do not match.', variant: 'destructive' });
       return;
     }
-
-    // Check password strength
-    const passwordStrength = checkPasswordStrength(newPassword);
-    if (!passwordStrength.isValid) {
-      toast({
-        title: "Password requirements not met",
-        description: "Please ensure your new password meets all the security requirements.",
-        variant: "destructive",
-      });
+    const strength = checkPasswordStrength(newPassword);
+    if (!strength.isValid) {
+      toast({ title: 'Password requirements not met', description: 'Please ensure your new password meets all the security requirements.', variant: 'destructive' });
       return;
     }
-    
     setIsChangingPassword(true);
-    
     try {
       const success = await changePassword(newPassword);
       if (success) {
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
+        setNewPassword('');
+        setConfirmPassword('');
       }
     } finally {
       setIsChangingPassword(false);
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      toast({
-        title: "Account deleted",
-        description: "Your account has been successfully deleted.",
-      });
-      logout();
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const success = await deleteAccount();
+      if (success) {
+        logout();
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleExportData = async () => {
-    if (!currentUser) return;
-    
     setIsExportingData(true);
     try {
-      await exportUserData(currentUser.id, exportFormat);
+      await exportUserData(exportFormat);
     } finally {
       setIsExportingData(false);
     }
@@ -137,10 +107,6 @@ const Profile = () => {
 
   const handleImageUpload = async (file: File) => {
     const result = await uploadAvatar(file);
-    if (result) {
-      // Refetch profile to get the updated avatar URL
-      await refetch();
-    }
     return result;
   };
 
@@ -150,7 +116,7 @@ const Profile = () => {
         <Navbar />
         <main className="flex-grow flex items-center justify-center bg-mint-mist">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-leaf-green mx-auto" />
             <p className="mt-2 text-slate-text">Loading profile...</p>
           </div>
         </main>
@@ -162,7 +128,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
       <main className="flex-grow py-8 px-4 sm:px-6 lg:px-8 bg-mint-mist">
         <div className="container mx-auto max-w-3xl">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
@@ -173,66 +138,38 @@ const Profile = () => {
                 fallbackText={`${firstName.charAt(0)}${lastName.charAt(0)}`}
               />
               <div className="text-center md:text-left">
-                <h1 className="text-2xl font-bold text-slate-text">
-                  {firstName} {lastName}
-                </h1>
+                <h1 className="text-2xl font-bold text-slate-text">{firstName} {lastName}</h1>
                 <p className="text-slate-text/80">{email}</p>
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-2 space-y-6">
               <Card className="bg-white shadow-md">
                 <CardHeader>
                   <CardTitle className="text-xl text-slate-text">Profile Information</CardTitle>
-                  <CardDescription>
-                    Update your personal information
-                  </CardDescription>
+                  <CardDescription>Update your personal information</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          required
-                        />
+                        <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          required
-                        />
+                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                       </div>
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                      <p className="text-xs text-slate-text/60">
-                        Email cannot be changed. Contact support if needed.
-                      </p>
+                      <Input id="email" type="email" value={email} disabled className="bg-gray-50" />
+                      <p className="text-xs text-slate-text/60">Email cannot be changed. Contact support if needed.</p>
                     </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="bg-leaf-green hover:bg-leaf-green/90"
-                      disabled={isUpdatingProfile}
-                    >
-                      {isUpdatingProfile ? "Updating..." : "Update Profile"}
+                    <Button type="submit" className="bg-leaf-green hover:bg-leaf-green/90" disabled={isUpdatingProfile}>
+                      {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
                     </Button>
                   </form>
                 </CardContent>
@@ -241,9 +178,7 @@ const Profile = () => {
               <Card className="bg-white shadow-md">
                 <CardHeader>
                   <CardTitle className="text-xl text-slate-text">Change Password</CardTitle>
-                  <CardDescription>
-                    Update your account password
-                  </CardDescription>
+                  <CardDescription>Update your account password</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -256,12 +191,11 @@ const Profile = () => {
                         onChange={(e) => setNewPassword(e.target.value)}
                         showPassword={showNewPassword}
                         onTogglePassword={() => setShowNewPassword(!showNewPassword)}
-                        showStrength={true}
-                        strengthRequirements={true}
+                        showStrength
+                        strengthRequirements
                         required
                       />
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
                       <PasswordInput
@@ -274,43 +208,27 @@ const Profile = () => {
                         required
                       />
                     </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="bg-leaf-green hover:bg-leaf-green/90"
-                      disabled={isChangingPassword}
-                    >
-                      {isChangingPassword ? "Changing..." : "Change Password"}
+                    <Button type="submit" className="bg-leaf-green hover:bg-leaf-green/90" disabled={isChangingPassword}>
+                      {isChangingPassword ? 'Changing...' : 'Change Password'}
                     </Button>
                   </form>
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="col-span-1">
               <Card className="bg-white shadow-md">
                 <CardHeader>
                   <CardTitle className="text-xl text-slate-text">Account Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={logout}
-                  >
-                    Log Out
-                  </Button>
-                  
-                  <Button 
-                    variant="destructive" 
-                    className="w-full"
-                    onClick={handleDeleteAccount}
-                  >
-                    Delete Account
+                  <Button variant="outline" className="w-full" onClick={logout}>Log Out</Button>
+                  <Button variant="destructive" className="w-full" onClick={handleDeleteAccount} disabled={isDeleting}>
+                    {isDeleting ? 'Deleting...' : 'Delete Account'}
                   </Button>
                 </CardContent>
               </Card>
-              
+
               <Card className="bg-white shadow-md mt-8">
                 <CardHeader>
                   <CardTitle className="text-xl text-slate-text">Data & Privacy</CardTitle>
@@ -338,22 +256,9 @@ const Profile = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start"
-                    onClick={handleExportData}
-                    disabled={isExportingData}
-                  >
+                  <Button variant="outline" className="w-full justify-start" onClick={handleExportData} disabled={isExportingData}>
                     <Download className="h-4 w-4 mr-2" />
-                    {isExportingData ? "Exporting..." : `Export as ${exportFormat.toUpperCase()}`}
-                  </Button>
-                  
-                  <Button variant="link" className="p-0 h-auto">
-                    Privacy Policy
-                  </Button>
-                  <Button variant="link" className="p-0 h-auto">
-                    Terms of Service
+                    {isExportingData ? 'Exporting...' : `Export as ${exportFormat.toUpperCase()}`}
                   </Button>
                 </CardContent>
               </Card>
@@ -361,10 +266,9 @@ const Profile = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );
 };
 
-export default Profile;
+export default ProfilePage;

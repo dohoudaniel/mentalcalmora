@@ -1,42 +1,83 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const getAllowedOrigins = (): string[] => {
+  const env = Deno.env.get("ALLOWED_ORIGINS");
+  if (env) return env.split(",").map((o) => o.trim());
+  return ["http://localhost:8080", "http://localhost:3000", "http://127.0.0.1:3000"];
 };
 
+const corsHeaders = (origin: string | null) => {
+  const allowed = getAllowedOrigins();
+  const allowedOrigin = origin && allowed.includes(origin) ? origin : allowed[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+};
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+interface MoodEntryData {
+  mood: string;
+  description?: string;
+  sentiment: string;
+  score: number;
+  timestamp: string;
+  insights?: string;
+}
+
+interface CalmobotRequest {
+  messages: ChatMessage[];
+  userData?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  moodEntries?: MoodEntryData[];
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  const requestOrigin = req.headers.get("origin");
+  const headers = corsHeaders(requestOrigin);
+
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers });
   }
 
   try {
-    const { messages, userData, moodEntries } = await req.json();
+    const body: CalmobotRequest = await req.json();
+    const { messages, userData, moodEntries } = body;
 
-    console.log('Calmobot chat request received');
-    console.log('User data:', userData);
-    console.log('Mood entries count:', moodEntries?.length || 0);
+    if (!Array.isArray(messages)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid request: messages must be an array" }),
+        { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Convert messages to Gemini format
-    const geminiMessages = messages.map((msg: any) => {
-      if (msg.role === 'system') {
+    if (!geminiApiKey) {
+      throw new Error("GEMINI_API_KEY not configured");
+    }
+
+    const geminiMessages = messages.map((msg) => {
+      if (msg.role === "system") {
         return {
-          role: 'user',
-          parts: [{ text: `System: ${msg.content}` }]
+          role: "user",
+          parts: [{ text: `System: ${msg.content}` }],
         };
       }
       return {
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }],
       };
     });
 
-    // Create personalized system prompt with health focus
     let systemPrompt = `You are Calmobot, an AI wellness assistant integrated into Calmora - a mood tracking and wellness application. Your purpose is to:
 
 1. Help users understand and process their emotions and moods
@@ -67,15 +108,12 @@ Guidelines:
 
 Remember: You're part of the Calmora wellness ecosystem, so feel free to reference mood tracking, wellness journeys, and the importance of self-care.`;
 
-    // Add personalized context if user data is available
-    if (userData) {
-      systemPrompt += `\n\nUser Information:
-- Name: ${userData.firstName} ${userData.lastName || ''}
-- First Name: ${userData.firstName}`;
+    if (userData?.firstName) {
+      systemPrompt += `\n\nUser Information:\n- Name: ${userData.firstName} ${userData.lastName || ""}`;
 
       if (moodEntries && moodEntries.length > 0) {
         systemPrompt += `\n\nRecent Mood History (last ${moodEntries.length} entries):`;
-        moodEntries.forEach((entry: any, index: number) => {
+        moodEntries.forEach((entry, index) => {
           const date = new Date(entry.timestamp).toLocaleDateString();
           systemPrompt += `\n${index + 1}. ${date}: Mood "${entry.mood}", Sentiment: ${entry.sentiment}, Score: ${entry.score}/1.0`;
           if (entry.description) {
@@ -85,54 +123,54 @@ Remember: You're part of the Calmora wellness ecosystem, so feel free to referen
             systemPrompt += `, Insights: "${entry.insights}"`;
           }
         });
-        
+
         systemPrompt += `\n\nUse this mood history to provide personalized insights and recommendations. Reference specific patterns, improvements, or concerns you notice in their mood journey.`;
       } else {
         systemPrompt += `\n\nThis user hasn't recorded any mood entries yet. Encourage them to start tracking their moods in Calmora for better personalized support.`;
       }
     }
 
-    // Ensure system prompt is included
-    if (geminiMessages.length === 0 || !geminiMessages[0].parts[0].text.includes('System:')) {
+    if (geminiMessages.length === 0 || !geminiMessages[0].parts[0].text.includes("System:")) {
       geminiMessages.unshift({
-        role: 'user',
-        parts: [{ text: `System: ${systemPrompt}` }]
+        role: "user",
+        parts: [{ text: `System: ${systemPrompt}` }],
       });
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: geminiMessages,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        },
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: geminiMessages,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
+          },
+        }),
+      }
+    );
 
     const data = await response.json();
-    
+
     if (!response.ok) {
-      console.error('Gemini API error:', data);
-      throw new Error(data.error?.message || 'Gemini API request failed');
+      throw new Error(data.error?.message || "Gemini API request failed");
     }
 
-    const assistantMessage = data.candidates[0].content.parts[0].text;
-
-    console.log('Calmobot response generated successfully');
+    const assistantMessage = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!assistantMessage) {
+      throw new Error("No response from AI");
+    }
 
     return new Response(JSON.stringify({ message: assistantMessage }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error('Error in calmobot-chat function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   }
 });

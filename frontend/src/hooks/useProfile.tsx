@@ -1,168 +1,115 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { apiFetch, apiUpload } from '@/api/client';
 import { toast } from '@/components/ui/use-toast';
-
-interface Profile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-}
+import type { Profile } from '@/types';
 
 export function useProfile() {
   const { currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchProfile();
+  const fetchProfile = useCallback(async () => {
+    if (!currentUser) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await apiFetch<Profile>('/profile/me');
+      if (mountedRef.current) {
+        setProfile(data);
+      }
+    } catch (error) {
+      if (mountedRef.current) {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to load profile',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [currentUser]);
 
-  const fetchProfile = async () => {
-    if (!currentUser) return;
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchProfile();
+    return () => { mountedRef.current = false; };
+  }, [fetchProfile]);
 
+  const updateProfile = useCallback(async (updates: Partial<Profile>): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return;
-      }
-
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!currentUser) return false;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', currentUser.id);
-
-      if (error) {
-        toast({
-          title: "Update failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+      const data = await apiFetch<Profile>('/profile/me', {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
       });
+      setProfile((prev) => (prev ? { ...prev, ...data } : data));
+      toast({ title: 'Profile updated', description: 'Your profile has been updated successfully.' });
       return true;
     } catch (error) {
-      console.error('Error updating profile:', error);
       toast({
-        title: "Update error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        title: 'Update failed',
+        description: error instanceof Error ? error.message : 'Failed to update profile',
+        variant: 'destructive',
       });
       return false;
     }
-  };
+  }, []);
 
-  const uploadAvatar = async (file: File) => {
-    if (!currentUser) return null;
-
+  const uploadAvatar = useCallback(async (file: File): Promise<string | null> => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.id}/avatar-${Date.now()}.${fileExt}`;
-
-      // Delete old avatar if exists
-      if (profile?.avatar_url) {
-        const oldFileName = profile.avatar_url.split('/').pop();
-        if (oldFileName) {
-          await supabase.storage
-            .from('profile-images')
-            .remove([`${currentUser.id}/${oldFileName}`]);
-        }
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile-images')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) {
-        toast({
-          title: "Upload failed",
-          description: uploadError.message,
-          variant: "destructive",
-        });
-        return null;
-      }
-
-      const { data } = supabase.storage
-        .from('profile-images')
-        .getPublicUrl(fileName);
-
-      const avatarUrl = data.publicUrl;
-
-      const updateResult = await updateProfile({ avatar_url: avatarUrl });
-      if (updateResult) {
-        return avatarUrl;
-      }
-      
-      return null;
+      const result = await apiUpload('/profile/me/avatar', file) as { avatar_url: string };
+      setProfile((prev) => (prev ? { ...prev, avatar_url: result.avatar_url } : null));
+      toast({ title: 'Avatar uploaded', description: 'Your profile picture has been updated.' });
+      return result.avatar_url;
     } catch (error) {
-      console.error('Error uploading avatar:', error);
       toast({
-        title: "Upload error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Failed to upload avatar',
+        variant: 'destructive',
       });
       return null;
     }
-  };
+  }, []);
 
-  const changePassword = async (newPassword: string) => {
+  const changePassword = useCallback(async (newPassword: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
+      await apiFetch('/profile/me/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ new_password: newPassword }),
       });
-
-      if (error) {
-        toast({
-          title: "Password change failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      toast({
-        title: "Password changed",
-        description: "Your password has been updated successfully.",
-      });
+      toast({ title: 'Password changed', description: 'Your password has been updated successfully.' });
       return true;
     } catch (error) {
-      console.error('Error changing password:', error);
       toast({
-        title: "Password change error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
+        title: 'Password change failed',
+        description: error instanceof Error ? error.message : 'Failed to change password',
+        variant: 'destructive',
       });
       return false;
     }
-  };
+  }, []);
+
+  const deleteAccount = useCallback(async (): Promise<boolean> => {
+    try {
+      await apiFetch('/profile/me', { method: 'DELETE' });
+      toast({ title: 'Account deleted', description: 'Your account has been permanently deleted.' });
+      return true;
+    } catch (error) {
+      toast({
+        title: 'Deletion failed',
+        description: error instanceof Error ? error.message : 'Failed to delete account',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  }, []);
 
   return {
     profile,
@@ -170,6 +117,7 @@ export function useProfile() {
     updateProfile,
     uploadAvatar,
     changePassword,
+    deleteAccount,
     refetch: fetchProfile,
   };
 }

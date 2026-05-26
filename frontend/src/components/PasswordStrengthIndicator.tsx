@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { Check, X } from 'lucide-react';
 import { passwordRequirements, checkPasswordStrength } from '@/utils/passwordValidation';
 
@@ -8,35 +6,27 @@ interface PasswordStrengthIndicatorProps {
   showRequirements?: boolean;
 }
 
-const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({
+const PasswordStrengthIndicator = ({
   password,
   showRequirements = true,
-}) => {
-  const { strength, color, score, totalRequirements, isValid } = checkPasswordStrength(password);
+}: PasswordStrengthIndicatorProps) => {
+  const { strength, color, score, totalRequirements } = checkPasswordStrength(password);
 
   const getStrengthColor = () => {
     switch (color) {
-      case 'red':
-        return 'bg-red-500';
-      case 'yellow':
-        return 'bg-yellow-500';
-      case 'green':
-        return 'bg-green-500';
-      default:
-        return 'bg-gray-300';
+      case 'red': return 'bg-red-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'green': return 'bg-green-500';
+      default: return 'bg-gray-300';
     }
   };
 
   const getStrengthText = () => {
     switch (strength) {
-      case 'weak':
-        return 'Weak';
-      case 'medium':
-        return 'Medium';
-      case 'strong':
-        return 'Strong';
-      default:
-        return '';
+      case 'weak': return 'Weak';
+      case 'medium': return 'Medium';
+      case 'strong': return 'Strong';
+      default: return '';
     }
   };
 

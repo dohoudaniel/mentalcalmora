@@ -1,17 +1,14 @@
-
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Heart, Calendar, CheckCircle, User } from "lucide-react";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Heart, Calendar, CheckCircle, User } from 'lucide-react';
 
 const Landing = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
       <main className="flex-grow">
-        {/* Hero Section */}
         <section className="bg-mint-mist py-16 md:py-24">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-12">
@@ -37,9 +34,9 @@ const Landing = () => {
               </div>
               <div className="md:w-1/2 relative">
                 <div className="aspect-square w-full max-w-md mx-auto relative">
-                  <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-leaf-green opacity-20 animate-float"></div>
-                  <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full bg-lavender opacity-30 animate-float" style={{ animationDelay: "2s" }}></div>
-                  <div className="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-sky-blue opacity-20 animate-float" style={{ animationDelay: "1s" }}></div>
+                  <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-leaf-green opacity-20 animate-float" />
+                  <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full bg-lavender opacity-30 animate-float" style={{ animationDelay: '2s' }} />
+                  <div className="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-sky-blue opacity-20 animate-float" style={{ animationDelay: '1s' }} />
                   <div className="relative z-10 bg-white p-6 rounded-2xl shadow-xl calmora-shadow">
                     <div className="flex items-center mb-4">
                       <span className="text-2xl mr-2">😊</span>
@@ -49,7 +46,7 @@ const Landing = () => {
                       </div>
                     </div>
                     <p className="text-sm text-slate-text mb-4">
-                      I'm feeling great today! My morning meditation really helped me start the day on a positive note.
+                      I&apos;m feeling great today! My morning meditation really helped me start the day on a positive note.
                     </p>
                     <div className="bg-leaf-green/10 p-3 rounded-lg">
                       <h4 className="font-medium text-leaf-green text-sm">Recommendation</h4>
@@ -63,75 +60,56 @@ const Landing = () => {
             </div>
           </div>
         </section>
-        
-        {/* Features Section */}
+
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-text mb-4">
-                Features Designed For Your Wellbeing
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-text mb-4">Features Designed For Your Wellbeing</h2>
               <p className="text-lg text-slate-text/80 max-w-2xl mx-auto">
                 Calmora helps you track your mental health journey with tools designed to support your wellbeing.
               </p>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="bg-mint-mist p-6 rounded-xl calmora-shadow calmora-card-hover">
                 <div className="bg-leaf-green h-12 w-12 rounded-full flex items-center justify-center mb-4">
                   <Calendar className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-text mb-2">Mood Tracking</h3>
-                <p className="text-slate-text/80">
-                  Record your daily mood and experiences to identify patterns over time.
-                </p>
+                <p className="text-slate-text/80">Record your daily mood and experiences to identify patterns over time.</p>
               </div>
-              
               <div className="bg-mint-mist p-6 rounded-xl calmora-shadow calmora-card-hover">
                 <div className="bg-sky-blue h-12 w-12 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-text mb-2">AI Analysis</h3>
-                <p className="text-slate-text/80">
-                  Get intelligent insights from our AI based on your mood entries and patterns.
-                </p>
+                <p className="text-slate-text/80">Get intelligent insights from our AI based on your mood entries and patterns.</p>
               </div>
-              
               <div className="bg-mint-mist p-6 rounded-xl calmora-shadow calmora-card-hover">
                 <div className="bg-lavender h-12 w-12 rounded-full flex items-center justify-center mb-4">
                   <Heart className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-text mb-2">Health Tips</h3>
-                <p className="text-slate-text/80">
-                  Receive personalized wellness recommendations to improve your mental health.
-                </p>
+                <p className="text-slate-text/80">Receive personalized wellness recommendations to improve your mental health.</p>
               </div>
-              
               <div className="bg-mint-mist p-6 rounded-xl calmora-shadow calmora-card-hover">
                 <div className="bg-peach-glow h-12 w-12 rounded-full flex items-center justify-center mb-4">
                   <User className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-text mb-2">Progress Tracking</h3>
-                <p className="text-slate-text/80">
-                  Monitor your improvement over time and celebrate your mental health journey.
-                </p>
+                <p className="text-slate-text/80">Monitor your improvement over time and celebrate your mental health journey.</p>
               </div>
             </div>
           </div>
         </section>
-        
-        {/* Testimonial Section */}
+
         <section className="py-16 bg-gradient-to-b from-white to-mint-mist dark:from-background dark:to-background">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-text dark:text-foreground mb-4">
-                How Calmora Helps
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-text dark:text-foreground mb-4">How Calmora Helps</h2>
               <p className="text-lg text-slate-text/80 dark:text-foreground/80 max-w-2xl mx-auto">
                 Real stories from people who have improved their mental wellness with Calmora.
               </p>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
@@ -144,10 +122,9 @@ const Landing = () => {
                   </div>
                 </div>
                 <p className="text-slate-text dark:text-foreground">
-                  "Tracking my moods daily has helped me notice patterns I never saw before. The recommendations are always spot-on."
+                  &quot;Tracking my moods daily has helped me notice patterns I never saw before. The recommendations are always spot-on.&quot;
                 </p>
               </div>
-              
               <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="h-12 w-12 rounded-full bg-sky-blue/30 flex items-center justify-center">
@@ -159,10 +136,9 @@ const Landing = () => {
                   </div>
                 </div>
                 <p className="text-slate-text dark:text-foreground">
-                  "The AI analysis gives me actionable insights that have genuinely improved my mental health. I'm much more aware of my emotions now."
+                  &quot;The AI analysis gives me actionable insights that have genuinely improved my mental health. I&apos;m much more aware of my emotions now.&quot;
                 </p>
               </div>
-              
               <div className="bg-white dark:bg-card p-6 rounded-xl shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="h-12 w-12 rounded-full bg-leaf-green/30 flex items-center justify-center">
@@ -174,21 +150,18 @@ const Landing = () => {
                   </div>
                 </div>
                 <p className="text-slate-text dark:text-foreground">
-                  "I love how Calmora doesn't just track my mood but gives me practical tips to improve it. It's like having a wellness coach in my pocket."
+                  &quot;I love how Calmora doesn&apos;t just track my mood but gives me practical tips to improve it. It&apos;s like having a wellness coach in my pocket.&quot;
                 </p>
               </div>
             </div>
           </div>
         </section>
-        
-        {/* CTA Section */}
+
         <section className="py-16 bg-mint-mist">
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="bg-white rounded-2xl p-8 md:p-12 shadow-lg calmora-shadow">
               <div className="text-center max-w-2xl mx-auto">
-                <h2 className="text-3xl md:text-4xl font-bold text-slate-text mb-4">
-                  Start Your Mental Wellness Journey Today
-                </h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-text mb-4">Start Your Mental Wellness Journey Today</h2>
                 <p className="text-lg text-slate-text/80 mb-8">
                   Join thousands of people who are taking control of their mental health with Calmora.
                 </p>
@@ -202,8 +175,7 @@ const Landing = () => {
           </div>
         </section>
       </main>
-      
-      <Footer className="bg-white" />
+      <Footer />
     </div>
   );
 };
