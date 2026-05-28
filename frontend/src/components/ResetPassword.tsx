@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { checkPasswordStrength } from '@/utils/passwordValidation';
+import { authService } from '@/services/authService';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -14,12 +14,17 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if we have a hash fragment indicating password recovery
+    // Extract access_token from URL hash fragment
     const hash = window.location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
-      // Still allow the form to show; Supabase client will handle the session
+    if (hash) {
+      const params = new URLSearchParams(hash.substring(1));
+      const token = params.get('access_token');
+      if (token) {
+        setRecoveryToken(token);
+      }
     }
   }, []);
 
@@ -39,18 +44,20 @@ const ResetPassword = () => {
       return;
     }
 
+    if (!recoveryToken) {
+      toast({ title: 'Invalid reset link', description: 'The password reset link is invalid or has expired.', variant: 'destructive' });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      } else {
-        setIsSuccess(true);
-        toast({ title: 'Success', description: 'Your password has been updated.' });
-        setTimeout(() => navigate('/login'), 2000);
-      }
-    } catch {
-      toast({ title: 'Error', description: 'An unexpected error occurred. Please try again.', variant: 'destructive' });
+      await authService.resetPassword(recoveryToken, password);
+      setIsSuccess(true);
+      toast({ title: 'Success', description: 'Your password has been updated.' });
+      setTimeout(() => navigate('/login'), 2000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +77,9 @@ const ResetPassword = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!recoveryToken && (
+              <p className="text-sm text-red-500">Invalid or expired reset link. Please request a new one.</p>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
               <Input id="password" type="password" placeholder="Enter new password" value={password} onChange={(e) => setPassword(e.target.value)} required />
@@ -78,7 +88,7 @@ const ResetPassword = () => {
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input id="confirmPassword" type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full bg-leaf-green hover:bg-leaf-green/90" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-leaf-green hover:bg-leaf-green/90" disabled={isLoading || !recoveryToken}>
               {isLoading ? 'Updating...' : 'Update Password'}
             </Button>
           </form>

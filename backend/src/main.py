@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from src.config import get_settings
 from src import db
-from src.routers import moods, chat, profile, recommendations, export
+from src.routers import moods, chat, profile, recommendations, export, auth
 
 settings = get_settings()
 
@@ -73,6 +73,7 @@ async def rate_limit_handler(request: Request, exc: Exception):
     )
 
 # Routers
+app.include_router(auth.router)
 app.include_router(moods.router)
 app.include_router(chat.router)
 app.include_router(profile.router)

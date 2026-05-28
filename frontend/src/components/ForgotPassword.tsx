@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { authService } from '@/services/authService';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -20,17 +20,12 @@ const ForgotPassword = () => {
     }
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) {
-        toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      } else {
-        setIsSubmitted(true);
-        toast({ title: 'Email sent', description: 'Check your inbox for password reset instructions.' });
-      }
-    } catch {
-      toast({ title: 'Error', description: 'An unexpected error occurred. Please try again.', variant: 'destructive' });
+      await authService.forgotPassword(email);
+      setIsSubmitted(true);
+      toast({ title: 'Email sent', description: 'Check your inbox for password reset instructions.' });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }

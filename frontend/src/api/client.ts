@@ -1,10 +1,9 @@
-import { supabase } from '@/integrations/supabase/client';
+import { authStore } from '@/services/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 async function getToken(): Promise<string | null> {
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
+  return authStore.getToken();
 }
 
 export async function apiFetch<T = unknown>(

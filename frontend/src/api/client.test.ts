@@ -1,28 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { apiFetch, apiUpload } from './client';
-
-const mockGetSession = vi.fn();
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: (...args: unknown[]) => mockGetSession(...args),
-    },
-  },
-}));
+import { authStore } from '@/services/authStore';
 
 describe('apiFetch', () => {
   beforeEach(() => {
-    mockGetSession.mockResolvedValue({
-      data: { session: { access_token: 'test-token' } },
-      error: null,
-    });
+    authStore.setToken('test-token');
     vi.stubGlobal('fetch', vi.fn());
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+    authStore.clear();
   });
 
   it('makes a GET request with auth header', async () => {
@@ -54,7 +43,7 @@ describe('apiFetch', () => {
   });
 
   it('works without token', async () => {
-    mockGetSession.mockResolvedValue({ data: { session: null }, error: null });
+    authStore.clear();
     const mockResponse = { ok: true, json: vi.fn().mockResolvedValue({}) };
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
@@ -66,16 +55,14 @@ describe('apiFetch', () => {
 
 describe('apiUpload', () => {
   beforeEach(() => {
-    mockGetSession.mockResolvedValue({
-      data: { session: { access_token: 'test-token' } },
-      error: null,
-    });
+    authStore.setToken('test-token');
     vi.stubGlobal('fetch', vi.fn());
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+    authStore.clear();
   });
 
   it('uploads file with FormData', async () => {
